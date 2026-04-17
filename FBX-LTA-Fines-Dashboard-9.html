@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>FBX · LTA Fines Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body, #root { height: 100%; }
+    body { font-family: 'DM Sans', 'Segoe UI', sans-serif; -webkit-font-smoothing: antialiased; }
+    select, input, button, textarea { font-family: inherit; }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+const { useState, useMemo, useRef } = React;
+
+// FBX 2026 — Jan 2026 to 15 Apr 2026 — 194 notices
+// 193 furnished (Col Z filled) · 1 pending (666FM)
+const ALL_NOTICES = [
+  {id:"AM06AG2512190309R",entity:"FBX",vehicleNo:"GV84",noticeNo:"AM06AG2512190309R",offenceDate:"19/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Nurul Aqilah Binte Abd Hazais",nric:"S9923474A",dob:"25/07/1999",gender:"Female",block:"462",street:"SEMBAWANG DRIVE",floor:"6",unit:"247",postal:"750462",contact:"6582073999",missingData:false},
+  {id:"AM26AG2512160100R",entity:"FBX",vehicleNo:"618FM",noticeNo:"AM26AG2512160100R",offenceDate:"16/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Mohamed Laili Bin Mohamed Mokhtar",nric:"S7147704E",dob:"16/10/1971",gender:"Male",block:"102",street:"WOODLANDS STREET 13",floor:"8",unit:"238",postal:"730102",contact:"6580250896",missingData:false},
+  {id:"AM08AG2512200396R",entity:"FBX",vehicleNo:"GV84",noticeNo:"AM08AG2512200396R",offenceDate:"20/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Nurul Aqilah Binte Abd Hazais",nric:"S9923474A",dob:"25/07/1999",gender:"Female",block:"462",street:"SEMBAWANG DRIVE",floor:"6",unit:"247",postal:"750462",contact:"6582073999",missingData:false},
+  {id:"AM10AG2512270467R",entity:"FBX",vehicleNo:"GZ39",noticeNo:"AM10AG2512270467R",offenceDate:"27/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Bryan Ong Ming Yew",nric:"S9928019J",dob:"28/08/1999",gender:"Male",block:"999A",street:"BUANGKOK CRESCENT",floor:"11",unit:"765",postal:"531999",contact:"6588072160",missingData:false},
+  {id:"AM03AG2512270451R",entity:"FBX",vehicleNo:"FR96",noticeNo:"AM03AG2512270451R",offenceDate:"27/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Mohammad Fauzie Bin Maroff",nric:"S8509056I",dob:"12/04/1985",gender:"Male",block:"52",street:"LORONG 6 TOA PAYOH",floor:"2",unit:"44",postal:"310052",contact:"89212028",missingData:false},
+  {id:"AM57AG2512160139R",entity:"FBX",vehicleNo:"618FM",noticeNo:"AM57AG2512160139R",offenceDate:"16/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Mohamed Laili Bin Mohamed Mokhtar",nric:"S7147704E",dob:"16/10/1971",gender:"Male",block:"102",street:"WOODLANDS STREET 13",floor:"8",unit:"238",postal:"730102",contact:"6580250896",missingData:false},
+  {id:"AM05AG2512280536R",entity:"FBX",vehicleNo:"663FM",noticeNo:"AM05AG2512280536R",offenceDate:"28/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Sharina Binte Kamarudin",nric:"S8520142E",dob:"02/07/1985",gender:"Female",block:"182",street:"RIVERVALE CRESCENT",floor:"10",unit:"309",postal:"540182",contact:"6591705440",missingData:false},
+  {id:"AM60AG2512270534R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM60AG2512270534R",offenceDate:"27/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM37AG2512210561R",entity:"FBX",vehicleNo:"717FM",noticeNo:"AM37AG2512210561R",offenceDate:"21/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Aslinda Binte Mohamed Selamat",nric:"S7619407F",dob:"24/06/1976",gender:"Female",block:"182",street:"RIVERVALE CRESCENT",floor:"2",unit:"291",postal:"540182",contact:"6585403491",missingData:false},
+  {id:"AM21AG2512210532R",entity:"FBX",vehicleNo:"GV96",noticeNo:"AM21AG2512210532R",offenceDate:"21/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Tan Chengyuan, Thomas",nric:"S8219976D",dob:"19/06/1982",gender:"Male",block:"309C",street:"TENGAH PARK AVENUE",floor:"14",unit:"283",postal:"693309",contact:"6598641488",missingData:false},
+  {id:"AM54AG2512230180R",entity:"FBX",vehicleNo:"GZ39",noticeNo:"AM54AG2512230180R",offenceDate:"23/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Bryan Ong Ming Yew",nric:"S9928019J",dob:"28/08/1999",gender:"Male",block:"999A",street:"BUANGKOK CRESCENT",floor:"11",unit:"765",postal:"531999",contact:"6588072160",missingData:false},
+  {id:"AM10AG2512240199R",entity:"FBX",vehicleNo:"GZ39",noticeNo:"AM10AG2512240199R",offenceDate:"24/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Bryan Ong Ming Yew",nric:"S9928019J",dob:"28/08/1999",gender:"Male",block:"999A",street:"BUANGKOK CRESCENT",floor:"11",unit:"765",postal:"531999",contact:"6588072160",missingData:false},
+  {id:"AM39AG2512230168R",entity:"FBX",vehicleNo:"729FM",noticeNo:"AM39AG2512230168R",offenceDate:"23/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Mohammed Azri Bin Abdul Jalil",nric:"S8435629H",dob:"03/11/1984",gender:"Male",block:"182",street:"RIVERVALE CRESCENT",floor:"2",unit:"287",postal:"540182",contact:"6580709228",missingData:false},
+  {id:"AM39AG2512230169R",entity:"FBX",vehicleNo:"717FM",noticeNo:"AM39AG2512230169R",offenceDate:"23/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Aslinda Binte Mohamed Selamat",nric:"S7619407F",dob:"24/06/1976",gender:"Female",block:"182",street:"RIVERVALE CRESCENT",floor:"2",unit:"291",postal:"540182",contact:"6585403491",missingData:false},
+  {id:"AM54AG2512080083R",entity:"FBX",vehicleNo:"663FM",noticeNo:"AM54AG2512080083R",offenceDate:"08/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Sharina Binte Kamarudin",nric:"S8520142E",dob:"02/07/1985",gender:"Female",block:"182",street:"RIVERVALE CRESCENT",floor:"10",unit:"309",postal:"540182",contact:"6591705440",missingData:false},
+  {id:"AM54AG2512090178R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM54AG2512090178R",offenceDate:"09/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM60AG2512090189R",entity:"FBX",vehicleNo:"663FM",noticeNo:"AM60AG2512090189R",offenceDate:"09/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Sharina Binte Kamarudin",nric:"S8520142E",dob:"02/07/1985",gender:"Female",block:"182",street:"RIVERVALE CRESCENT",floor:"10",unit:"309",postal:"540182",contact:"6591705440",missingData:false},
+  {id:"AM10AG2512100198R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM10AG2512100198R",offenceDate:"10/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM02AG2512190305R",entity:"FBX",vehicleNo:"GW46",noticeNo:"AM02AG2512190305R",offenceDate:"19/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a85389e60888344dcba12",riderName:"Chhit Sreyoun",nric:"S9582115D",dob:"05/09/1995",gender:"Female",block:"278",street:"TOH GUAN ROAD",floor:"07",unit:"181",postal:"600278",contact:"6588563587",missingData:false},
+  {id:"AM03AG2512080002R",entity:"FBX",vehicleNo:"GW48",noticeNo:"AM03AG2512080002R",offenceDate:"08/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Jereme Pay Joe Rui",nric:"S9316208J",dob:"08/05/1993",gender:"Male",block:"531",street:"BUKIT BATOK STREET 51",floor:"8",unit:"128",postal:"650531",contact:"6580332640",missingData:false},
+  {id:"AM10AG2512140545R",entity:"FBX",vehicleNo:"GW44",noticeNo:"AM10AG2512140545R",offenceDate:"14/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Mohamed Ma Roumelia Joy Botin",nric:"S8057785J",dob:"30/06/1980",gender:"Male",block:"999A",street:"BUANGKOK CRESCENT",floor:"8",unit:"793",postal:"531999",contact:"6588156300",missingData:false},
+  {id:"AM26AG2512110329R",entity:"FBX",vehicleNo:"GH44",noticeNo:"AM26AG2512110329R",offenceDate:"11/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Muhamad Masnoh Bin Johar",nric:"S8229108C",dob:"10/09/1982",gender:"Male",block:"804",street:"WOODLANDS STREET 81",floor:"2",unit:"39",postal:"730804",contact:"6589872619",missingData:false},
+  {id:"AM46AG2512100268R",entity:"FBX",vehicleNo:"GY64",noticeNo:"AM46AG2512100268R",offenceDate:"10/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Muhammad Nazri Bin Mohamad Zulkiflee",nric:"S8512619I",dob:"24/02/1985",gender:"Male",block:"55",street:"LORONG 5 TOA PAYOH",floor:"9",unit:"178",postal:"310055",contact:"6588522402",missingData:false},
+  {id:"AM54AG2512100278R",entity:"FBX",vehicleNo:"717FM",noticeNo:"AM54AG2512100278R",offenceDate:"10/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Aslinda Binte Mohamed Selamat",nric:"S7619407F",dob:"24/06/1976",gender:"Female",block:"182",street:"RIVERVALE CRESCENT",floor:"2",unit:"291",postal:"540182",contact:"6585403491",missingData:false},
+  {id:"AM22AG2512110326R",entity:"FBX",vehicleNo:"GY62",noticeNo:"AM22AG2512110326R",offenceDate:"11/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Hanafie Bin Dolklifie",nric:"S8214329G",dob:"13/05/1982",gender:"Male",block:"191",street:"BOON LAY DRIVE",floor:"2",unit:"134",postal:"640191",contact:"6589193069",missingData:false},
+  {id:"AM54AG2512100275R",entity:"FBX",vehicleNo:"729FM",noticeNo:"AM54AG2512100275R",offenceDate:"10/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Mohammed Azri Bin Abdul Jalil",nric:"S8435629H",dob:"03/11/1984",gender:"Male",block:"182",street:"RIVERVALE CRESCENT",floor:"2",unit:"287",postal:"540182",contact:"6580709228",missingData:false},
+  {id:"AM59AG2512180303R",entity:"FBX",vehicleNo:"FR31",noticeNo:"AM59AG2512180303R",offenceDate:"18/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a729b595054a12ddd48c1",riderName:"Muhammad Saiffudin Bin Muhammad Noh",nric:"S9645722G",dob:"12/12/1996",gender:"Male",block:"12",street:"EUNOS CRESCENT",floor:"11",unit:"2767",postal:"400012",contact:"6588192767",missingData:false},
+  {id:"AM16AG2512170163R",entity:"FBX",vehicleNo:"GY20",noticeNo:"AM16AG2512170163R",offenceDate:"17/12/2025",scanDate:"06/01/2026",expiryDate:"23/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Mazlinda Binte Mahfodz",nric:"S8439018F",dob:"17/12/1984",gender:"Female",block:"333",street:"KRETA AYER ROAD",floor:"16",unit:"20",postal:"80333",contact:"6597579624",missingData:false},
+  {id:"AM55AG2512110369R",entity:"FBX",vehicleNo:"GY64",noticeNo:"AM55AG2512110369R",offenceDate:"11/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a83f4595054a12ddd8ed0",riderName:"Muhammad Nazri Bin Mohamad Zulkiflee",nric:"S8512619I",dob:"24/02/1985",gender:"Male",block:"55",street:"LORONG 5 TOA PAYOH",floor:"9",unit:"178",postal:"310055",contact:"6588522402",missingData:false},
+  {id:"AM29AG2512110335R",entity:"FBX",vehicleNo:"GH44",noticeNo:"AM29AG2512110335R",offenceDate:"11/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Muhamad Masnoh Bin Johar",nric:"S8229108C",dob:"10/09/1982",gender:"Male",block:"804",street:"WOODLANDS STREET 81",floor:"2",unit:"39",postal:"730804",contact:"6589872619",missingData:false},
+  {id:"AM32AG2512100244R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM32AG2512100244R",offenceDate:"10/12/2025",scanDate:"02/01/2026",expiryDate:"20/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 696a6a6f595054a12ddd1105",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM55AG2601040196R",entity:"FBX",vehicleNo:"FR96",noticeNo:"AM55AG2601040196R",offenceDate:"04/01/2026",scanDate:"13/01/2026",expiryDate:"30/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69770fa088796070268ede02",riderName:"Mohammad Fauzie Bin Maroff",nric:"S8509056I",dob:"12/04/1985",gender:"Male",block:"52",street:"LORONG 6 TOA PAYOH",floor:"2",unit:"44",postal:"310052",contact:"89212028",missingData:false},
+  {id:"AM45AG2601020503R",entity:"FBX",vehicleNo:"GV99",noticeNo:"AM45AG2601020503R",offenceDate:"02/01/2026",scanDate:"13/01/2026",expiryDate:"30/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69770fa088796070268ede02",riderName:"Muhammad Hairi Rahmat",nric:"S8210003B",dob:"16/04/1982",gender:"Male",block:"188",street:"BOON LAY DRIVE",floor:"1",unit:"92",postal:"640188",contact:"85291549",missingData:false},
+  {id:"AM40AG2601040178R",entity:"FBX",vehicleNo:"FR96",noticeNo:"AM40AG2601040178R",offenceDate:"04/01/2026",scanDate:"13/01/2026",expiryDate:"30/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69770fa088796070268ede02",riderName:"Mohammad Fauzie Bin Maroff",nric:"S8509056I",dob:"12/04/1985",gender:"Male",block:"52",street:"LORONG 6 TOA PAYOH",floor:"2",unit:"44",postal:"310052",contact:"89212028",missingData:false},
+  {id:"AM51AG2601020513R",entity:"FBX",vehicleNo:"HL7",noticeNo:"AM51AG2601020513R",offenceDate:"02/01/2026",scanDate:"13/01/2026",expiryDate:"30/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69770fa088796070268ede02",riderName:"Zharina Binte Mohamed Jeddie",nric:"S7443656J",dob:"19/10/1974",gender:"Female",block:"9",street:"TECK WHYE LANE",floor:"2",unit:"262",postal:"680009",contact:"6589106687",missingData:false},
+  {id:"AM31AG2512290048R",entity:"FBX",vehicleNo:"663FM",noticeNo:"AM31AG2512290048R",offenceDate:"29/12/2025",scanDate:"13/01/2026",expiryDate:"30/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69770fa088796070268ede02",riderName:"Sharina Binte Kamarudin",nric:"S8520142E",dob:"02/07/1985",gender:"Female",block:"182",street:"RIVERVALE CRESCENT",floor:"10",unit:"309",postal:"540182",contact:"6591705440",missingData:false},
+  {id:"AM37AG2601010393R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM37AG2601010393R",offenceDate:"01/01/2026",scanDate:"13/01/2026",expiryDate:"30/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69770fa088796070268ede02",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM34AG2512310280R",entity:"FBX",vehicleNo:"FN72",noticeNo:"AM34AG2512310280R",offenceDate:"31/12/2025",scanDate:"13/01/2026",expiryDate:"30/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69770fa088796070268ede02",riderName:"Mohammed Shamerudin Bin Moonshi Kamarudin",nric:"S9540776E",dob:"06/10/1995",gender:"Male",block:"428",street:"BEDOK NORTH ROAD",floor:"3",unit:"631",postal:"460428",contact:"6587725321",missingData:false},
+  {id:"AM39AG2601040173R",entity:"FBX",vehicleNo:"FR96",noticeNo:"AM39AG2601040173R",offenceDate:"04/01/2026",scanDate:"13/01/2026",expiryDate:"30/01/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69770fa088796070268ede02",riderName:"Mohammad Fauzie Bin Maroff",nric:"S8509056I",dob:"12/04/1985",gender:"Male",block:"52",street:"LORONG 6 TOA PAYOH",floor:"2",unit:"44",postal:"310052",contact:"89212028",missingData:false},
+  {id:"AM31AG2601080325R",entity:"FBX",vehicleNo:"GV94",noticeNo:"AM31AG2601080325R",offenceDate:"08/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc390ba60c8fd35be44c4",riderName:"Shankar S/o Ramu",nric:"S8203755A",dob:"17/01/1982",gender:"Male",block:"513",street:"WELLINGTON CIRCLE",floor:"5",unit:"36",postal:"750513",contact:"6580924721",missingData:false},
+  {id:"AM17AH2601080304R",entity:"FBX",vehicleNo:"ES85",noticeNo:"AM17AH2601080304R",offenceDate:"08/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc8da2a982c5ed223d2c2",riderName:"Nur Syahirah Ayu Binte Mohamed Ali",nric:"S9735481B",dob:"10/10/1997",gender:"Female",block:"248",street:"BANGKIT ROAD",floor:"3",unit:"278",postal:"670248",contact:"6596376909",missingData:false},
+  {id:"AM46AG2601080357R",entity:"FBX",vehicleNo:"GY64",noticeNo:"AM46AG2601080357R",offenceDate:"08/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc390ba60c8fd35be44c4",riderName:"Muhammad Nazri Bin Mohamad Zulkiflee",nric:"S8512619I",dob:"24/02/1985",gender:"Male",block:"55",street:"LORONG 5 TOA PAYOH",floor:"9",unit:"178",postal:"310055",contact:"6588522402",missingData:false},
+  {id:"AM49AH2601080359R",entity:"FBX",vehicleNo:"HL7",noticeNo:"AM49AH2601080359R",offenceDate:"08/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc390ba60c8fd35be44c4",riderName:"Zharina Binte Mohamed Jeddie",nric:"S7443656J",dob:"19/10/1974",gender:"Female",block:"9",street:"TECK WHYE LANE",floor:"2",unit:"262",postal:"680009",contact:"6589106687",missingData:false},
+  {id:"AM30AH2601110216R",entity:"FBX",vehicleNo:"GH44",noticeNo:"AM30AH2601110216R",offenceDate:"11/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc390ba60c8fd35be44c4",riderName:"Muhamad Masnoh Bin Johar",nric:"S8229108C",dob:"10/09/1982",gender:"Male",block:"804",street:"WOODLANDS STREET 81",floor:"2",unit:"39",postal:"730804",contact:"6589872619",missingData:false},
+  {id:"AM08AG2601050008R",entity:"FBX",vehicleNo:"GV94",noticeNo:"AM08AG2601050008R",offenceDate:"05/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc390ba60c8fd35be44c4",riderName:"Shankar S/o Ramu",nric:"S8203755A",dob:"17/01/1982",gender:"Male",block:"513",street:"WELLINGTON CIRCLE",floor:"5",unit:"36",postal:"750513",contact:"6580924721",missingData:false},
+  {id:"AM02AH2601060089R",entity:"FBX",vehicleNo:"GY62",noticeNo:"AM02AH2601060089R",offenceDate:"06/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc390ba60c8fd35be44c4",riderName:"Hanafie Bin Dolklifie",nric:"S8214329G",dob:"13/05/1982",gender:"Male",block:"191",street:"BOON LAY DRIVE",floor:"2",unit:"134",postal:"640191",contact:"6589193069",missingData:false},
+  {id:"AM54AG2601050077R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM54AG2601050077R",offenceDate:"05/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc390ba60c8fd35be44c4",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM10AG2601060101R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM10AG2601060101R",offenceDate:"06/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc390ba60c8fd35be44c4",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM51AH2601080366R",entity:"FBX",vehicleNo:"HL57",noticeNo:"AM51AH2601080366R",offenceDate:"08/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc65a33bb9b02fa37d61c",riderName:"Shaul Hamid Bin Abdul Jabar",nric:"S9703332C",dob:"26/01/1997",gender:"Male",block:"115",street:"TECK WHYE LANE",floor:"03",unit:"708",postal:"680115",contact:"6580817450",missingData:false},
+  {id:"AM34AG2601060151R",entity:"FBX",vehicleNo:"GY91",noticeNo:"AM34AG2601060151R",offenceDate:"06/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc65a33bb9b02fa37d61c",riderName:"Mohammed Sharifudin Bin Moonshi Kamarudin",nric:"S9911197F",dob:"18/04/1999",gender:"Male",block:"428",street:"BEDOK NORTH ROAD",floor:"3",unit:"631",postal:"460428",contact:"6588867491",missingData:false},
+  {id:"AM27AG2601070222R",entity:"FBX",vehicleNo:"GV94",noticeNo:"AM27AG2601070222R",offenceDate:"07/01/2026",scanDate:"19/01/2026",expiryDate:"04/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 697cc390ba60c8fd35be44c4",riderName:"Shankar S/o Ramu",nric:"S8203755A",dob:"17/01/1982",gender:"Male",block:"513",street:"WELLINGTON CIRCLE",floor:"5",unit:"36",postal:"750513",contact:"6580924721",missingData:false},
+  {id:"MX202512100015E",entity:"FBX",vehicleNo:"GY15",noticeNo:"MX202512100015E",offenceDate:"28/11/2025",scanDate:"20/01/2026",expiryDate:"06/02/2026",courtDate:null,status:"furnished",colZ:"Submitted through Feedback Form on 02/02/2026",riderName:"Mohammad Saifuzzaman Bin Mohamad Mokhtar",nric:"S8324242F",dob:"12/08/1983",gender:"Male",block:"179",street:"BOON LAY DRIVE",floor:"6",unit:"450",postal:"640179",contact:"6586044886",missingData:false},
+  {id:"AM50AH2601140242R",entity:"FBX",vehicleNo:"GY44",noticeNo:"AM50AH2601140242R",offenceDate:"14/01/2026",scanDate:"28/01/2026",expiryDate:"13/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69809ad7f6730843c52d02a0",riderName:"Sorfina Begum Binte Abdul Rahim",nric:"S9706917D",dob:"27/02/1997",gender:"Female",block:"801B",street:"KEAT HONG CLOSE",floor:"02",unit:"19",postal:"682801",contact:"6582635334",missingData:false},
+  {id:"AIVI30AH2601140212R",entity:"FBX",vehicleNo:"666FM",noticeNo:"AIVI30AH2601140212R",offenceDate:"14/01/2026",scanDate:"28/01/2026",expiryDate:"13/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69807ba546fa203b7ceb25a6",riderName:"Darul Alfian Bin Sukor",nric:"T0100374C",dob:"08/01/2001",gender:"Male",block:"516",street:"JURONG WEST STREET 52",floor:"4",unit:"71",postal:"640516",contact:"6585710395",missingData:false},
+  {id:"AM34AH2601150308R",entity:"FBX",vehicleNo:"HL44",noticeNo:"AM34AH2601150308R",offenceDate:"15/01/2026",scanDate:"28/01/2026",expiryDate:"13/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69809ad7f6730843c52d02a0",riderName:"Siti Norshuhaiba Binti A Rashid",nric:"S9386721A",dob:"06/10/1993",gender:"Female",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6598572427",missingData:false},
+  {id:"AM24AH2601180230R",entity:"FBX",vehicleNo:"HL57",noticeNo:"AM24AH2601180230R",offenceDate:"18/01/2026",scanDate:"28/01/2026",expiryDate:"13/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69809ad7f6730843c52d02a0",riderName:"Shaul Hamid Bin Abdul Jabar",nric:"S9703332C",dob:"26/01/1997",gender:"Male",block:"115",street:"TECK WHYE LANE",floor:"03",unit:"708",postal:"680115",contact:"6580817450",missingData:false},
+  {id:"AM05AH2601170089R",entity:"FBX",vehicleNo:"666FM",noticeNo:"AM05AH2601170089R",offenceDate:"17/01/2026",scanDate:"28/01/2026",expiryDate:"13/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69807ba546fa203b7ceb25a6",riderName:"Darul Alfian Bin Sukor",nric:"T0100374C",dob:"08/01/2001",gender:"Male",block:"516",street:"JURONG WEST STREET 52",floor:"4",unit:"71",postal:"640516",contact:"6585710395",missingData:false},
+  {id:"AM51AH2601170180R",entity:"FBX",vehicleNo:"HM54",noticeNo:"AM51AH2601170180R",offenceDate:"17/01/2026",scanDate:"28/01/2026",expiryDate:"13/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69809ad7f6730843c52d02a0",riderName:"Wan Hazlin Bin Razali",nric:"S9623599B",dob:"02/07/1996",gender:"Male",block:"646A",street:"SENJA CLOSE",floor:"09",unit:"209",postal:"671646",contact:"6588413103",missingData:false},
+  {id:"AM30AH2601160030R",entity:"FBX",vehicleNo:"GU99",noticeNo:"AM30AH2601160030R",offenceDate:"16/01/2026",scanDate:"28/01/2026",expiryDate:"13/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69807ba546fa203b7ceb25a6",riderName:"Putera Muhammad Naufal Bin Zainal",nric:"T0030251H",dob:"27/05/2000",gender:"Male",block:"462",street:"SEMBAWANG DRIVE",floor:"16",unit:"239",postal:"750462",contact:"6591290527",missingData:false},
+  {id:"AM08AH2601160006R",entity:"FBX",vehicleNo:"GU99",noticeNo:"AM08AH2601160006R",offenceDate:"16/01/2026",scanDate:"28/01/2026",expiryDate:"13/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69807ba546fa203b7ceb25a6",riderName:"Putera Muhammad Naufal Bin Zainal",nric:"T0030251H",dob:"27/05/2000",gender:"Male",block:"462",street:"SEMBAWANG DRIVE",floor:"16",unit:"239",postal:"750462",contact:"6591290527",missingData:false},
+  {id:"AM34AH2601220359R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM34AH2601220359R",offenceDate:"22/01/2026",scanDate:"05/02/2026",expiryDate:"23/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698eeb8d76a8dc52d9b022d7",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM51AH2601250630R",entity:"FBX",vehicleNo:"HM9",noticeNo:"AM51AH2601250630R",offenceDate:"25/01/2026",scanDate:"05/02/2026",expiryDate:"23/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698eeb8d76a8dc52d9b022d7",riderName:"Md Nazri Shufri Bin Rahmat",nric:"S8627354C",dob:"23/09/1986",gender:"Female",block:"447A",street:"BUKIT BATOK WEST AVENUE 9",floor:"02",unit:"142",postal:"651447",contact:"6591395020",missingData:false},
+  {id:"AM29AH2601250592R",entity:"FBX",vehicleNo:"B381",noticeNo:"AM29AH2601250592R",offenceDate:"25/01/2026",scanDate:"05/02/2026",expiryDate:"23/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698eeb8d76a8dc52d9b022d7",riderName:"Siti Nur Srimazuirah Binte Sazali",nric:"T0029361F",dob:"04/09/2000",gender:"Female",block:"275",street:"YISHUN STREET 22",floor:"2",unit:"132",postal:"760275",contact:"6588751684",missingData:false},
+  {id:"AM01AH2601240462R",entity:"FBX",vehicleNo:"GY44",noticeNo:"AM01AH2601240462R",offenceDate:"24/01/2026",scanDate:"05/02/2026",expiryDate:"23/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698eeb8d76a8dc52d9b022d7",riderName:"Sorfina Begum Binte Abdul Rahim",nric:"S9706917D",dob:"27/02/1997",gender:"Female",block:"801B",street:"KEAT HONG CLOSE",floor:"02",unit:"19",postal:"682801",contact:"6582635334",missingData:false},
+  {id:"AM51AH2601230452R",entity:"FBX",vehicleNo:"HL7",noticeNo:"AM51AH2601230452R",offenceDate:"23/01/2026",scanDate:"05/02/2026",expiryDate:"23/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698eeb8d76a8dc52d9b022d7",riderName:"Zharina Binte Mohamed Jeddie",nric:"S7443656J",dob:"19/10/1974",gender:"Female",block:"9",street:"TECK WHYE LANE",floor:"2",unit:"262",postal:"680009",contact:"6589106687",missingData:false},
+  {id:"AM49AH2601230450R",entity:"FBX",vehicleNo:"HL7",noticeNo:"AM49AH2601230450R",offenceDate:"23/01/2026",scanDate:"05/02/2026",expiryDate:"23/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698eeb8d76a8dc52d9b022d7",riderName:"Zharina Binte Mohamed Jeddie",nric:"S7443656J",dob:"19/10/1974",gender:"Female",block:"9",street:"TECK WHYE LANE",floor:"2",unit:"262",postal:"680009",contact:"6589106687",missingData:false},
+  {id:"AM56AH2601240534R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM56AH2601240534R",offenceDate:"24/01/2026",scanDate:"05/02/2026",expiryDate:"23/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698eeb8d76a8dc52d9b022d7",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM51AH2601240528R",entity:"FBX",vehicleNo:"HM9",noticeNo:"AM51AH2601240528R",offenceDate:"24/01/2026",scanDate:"05/02/2026",expiryDate:"23/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698eeb8d76a8dc52d9b022d7",riderName:"Md Nazri Shufri Bin Rahmat",nric:"S8627354C",dob:"23/09/1986",gender:"Female",block:"447A",street:"BUKIT BATOK WEST AVENUE 9",floor:"02",unit:"142",postal:"651447",contact:"6591395020",missingData:false},
+  {id:"AM29AH2601190054R",entity:"FBX",vehicleNo:"666FM",noticeNo:"AM29AH2601190054R",offenceDate:"19/01/2026",scanDate:"05/02/2026",expiryDate:"23/02/2026",courtDate:null,status:"expired",colZ:"",riderName:"Darul Alfian Bin Sukor",nric:"T0100374C",dob:"08/01/2001",gender:"Male",block:"516",street:"JURONG WEST STREET 52",floor:"4",unit:"71",postal:"640516",contact:"6585710395",missingData:false},
+  {id:"AM34AH2601280233R",entity:"FBX",vehicleNo:"HL44",noticeNo:"AM34AH2601280233R",offenceDate:"28/01/2026",scanDate:"09/02/2026",expiryDate:"25/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698f042306e8fd3984a14788",riderName:"Siti Norshuhaiba Binti A Rashid",nric:"S9386721A",dob:"06/10/1993",gender:"Female",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6598572427",missingData:false},
+  {id:"AM08AH2601300363R",entity:"FBX",vehicleNo:"925FM",noticeNo:"AM08AH2601300363R",offenceDate:"30/01/2026",scanDate:"09/02/2026",expiryDate:"25/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698f042306e8fd3984a14788",riderName:"Nur'ain Binte Mohd Minwari",nric:"S9224047I",dob:"21/06/1992",gender:"Female",block:"364A",street:"SEMBAWANG CRESCENT",floor:"15",unit:"223",postal:"751364",contact:"6587420490",missingData:false},
+  {id:"AM50AH2601290348R",entity:"FBX",vehicleNo:"GY44",noticeNo:"AM50AH2601290348R",offenceDate:"29/01/2026",scanDate:"09/02/2026",expiryDate:"25/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698f042306e8fd3984a14788",riderName:"Sorfina Begum Binte Abdul Rahim",nric:"S9706917D",dob:"27/02/1997",gender:"Female",block:"801B",street:"KEAT HONG CLOSE",floor:"02",unit:"19",postal:"682801",contact:"6582635334",missingData:false},
+  {id:"AM34AH2601290331R",entity:"FBX",vehicleNo:"HL54",noticeNo:"AM34AH2601290331R",offenceDate:"29/01/2026",scanDate:"09/02/2026",expiryDate:"25/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698f042306e8fd3984a14788",riderName:"Muhammad Izzuddin Bin Zaini",nric:"S9723374H",dob:"19/07/1997",gender:"Male",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6582489301",missingData:false},
+  {id:"AM08AH2601280197R",entity:"FBX",vehicleNo:"666FM",noticeNo:"AM08AH2601280197R",offenceDate:"28/01/2026",scanDate:"09/02/2026",expiryDate:"25/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698f042306e8fd3984a14788",riderName:"Darul Alfian Bin Sukor",nric:"T0100374C",dob:"08/01/2001",gender:"Male",block:"516",street:"JURONG WEST STREET 52",floor:"4",unit:"71",postal:"640516",contact:"6585710395",missingData:false},
+  {id:"AM32AH2602010161R",entity:"FBX",vehicleNo:"FT21",noticeNo:"AM32AH2602010161R",offenceDate:"01/02/2026",scanDate:"09/02/2026",expiryDate:"25/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698f042306e8fd3984a14788",riderName:"Rafidah Binte Rahmat",nric:"S8503866D",dob:"14/02/1985",gender:"Female",block:"469",street:"ANG MO KIO AVENUE 10",floor:"3",unit:"952",postal:"560469",contact:"6589218132",missingData:false},
+  {id:"AM27AH2602010149R",entity:"FBX",vehicleNo:"B381",noticeNo:"AM27AH2602010149R",offenceDate:"01/02/2026",scanDate:"09/02/2026",expiryDate:"25/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698f042306e8fd3984a14788",riderName:"Siti Nur Srimazuirah Binte Sazali",nric:"T0029361F",dob:"04/09/2000",gender:"Female",block:"275",street:"YISHUN STREET 22",floor:"2",unit:"132",postal:"760275",contact:"6588751684",missingData:false},
+  {id:"AM01AH2601290277R",entity:"FBX",vehicleNo:"GY7",noticeNo:"AM01AH2601290277R",offenceDate:"29/01/2026",scanDate:"09/02/2026",expiryDate:"25/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698f042306e8fd3984a14788",riderName:"Muhammad Khairulnaim Bin Rosli",nric:"S8801514B",dob:"14/01/1988",gender:"Male",block:"15",street:"GHIM MOH ROAD",floor:"02",unit:"29",postal:"270015",contact:"6587530843",missingData:false},
+  {id:"AM50AH2601270166R",entity:"FBX",vehicleNo:"HM9",noticeNo:"AM50AH2601270166R",offenceDate:"27/01/2026",scanDate:"09/02/2026",expiryDate:"25/02/2026",courtDate:null,status:"furnished",colZ:"Response ID: 698f042306e8fd3984a14788",riderName:"Md Nazri Shufri Bin Rahmat",nric:"S8627354C",dob:"23/09/1986",gender:"Female",block:"447A",street:"BUKIT BATOK WEST AVENUE 9",floor:"02",unit:"142",postal:"651447",contact:"6591395020",missingData:false},
+  {id:"AM02AI2602110002R",entity:"FBX",vehicleNo:"GY62",noticeNo:"AM02AI2602110002R",offenceDate:"11/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69ae4873e8aeca423b71821e",riderName:"Hanafie Bin Dolklifie",nric:"S8214329G",dob:"13/05/1982",gender:"Male",block:"191",street:"BOON LAY DRIVE",floor:"2",unit:"134",postal:"640191",contact:"6589193069",missingData:false},
+  {id:"AM28A12602110049R",entity:"FBX",vehicleNo:"HN79",noticeNo:"AM28A12602110049R",offenceDate:"11/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee5e852b498a952f7e832",riderName:"Mohammad Firdaus Bin Sulaiman",nric:"S8836937H",dob:"30/09/1988",gender:"Male",block:"366",street:"YISHUN RING ROAD",floor:"5",unit:"1506",postal:"760366",contact:"6585158599",missingData:false},
+  {id:"AM07AH2602040195R",entity:"FBX",vehicleNo:"745FM",noticeNo:"AM07AH2602040195R",offenceDate:"04/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee2522bbb26c0a63814bb",riderName:"Nur Shahiera Binte Masirwan",nric:"T0141431Z",dob:"01/12/2001",gender:"Female",block:"108",street:"YISHUN RING ROAD",floor:"9",unit:"299",postal:"760108",contact:"6593404409",missingData:false},
+  {id:"AM17AI2602150414R",entity:"FBX",vehicleNo:"GX74",noticeNo:"AM17AI2602150414R",offenceDate:"15/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee5e852b498a952f7e832",riderName:"Apps Kelly Geraldo",nric:"S8709480D",dob:"08/04/1987",gender:"Male",block:"941",street:"JURONG WEST STREET 91",floor:"7",unit:"481",postal:"640941",contact:"6585984655",missingData:false},
+  {id:"AM27AI2602060058R",entity:"FBX",vehicleNo:"745FM",noticeNo:"AM27AI2602060058R",offenceDate:"06/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee2522bbb26c0a63814bb",riderName:"Nur Shahiera Binte Masirwan",nric:"T0141431Z",dob:"01/12/2001",gender:"Female",block:"108",street:"YISHUN RING ROAD",floor:"9",unit:"299",postal:"760108",contact:"6593404409",missingData:false},
+  {id:"AM51AI2602040265R",entity:"FBX",vehicleNo:"HN4",noticeNo:"AM51AI2602040265R",offenceDate:"04/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee2522bbb26c0a63814bb",riderName:"Marlina Binte Sapar",nric:"S9013749B",dob:"05/03/1990",gender:"Female",block:"547D",street:"SEGAR ROAD",floor:"5",unit:"29",postal:"674547",contact:"6580153369",missingData:false},
+  {id:"AM09AI2602070151R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM09AI2602070151R",offenceDate:"07/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee2522bbb26c0a63814bb",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM11AI2602070156R",entity:"FBX",vehicleNo:"HL54",noticeNo:"AM11AI2602070156R",offenceDate:"07/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee5e852b498a952f7e832",riderName:"Muhammad Izzuddin Bin Zaini",nric:"S9723374H",dob:"19/07/1997",gender:"Male",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6582489301",missingData:false},
+  {id:"AM22AI2602070189R",entity:"FBX",vehicleNo:"GV12",noticeNo:"AM22AI2602070189R",offenceDate:"07/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee5e852b498a952f7e832",riderName:"Mohammad Danish Bin Mohammad Azi",nric:"T0326668G",dob:"12/09/2003",gender:"Male",block:"15",street:"LORONG 7 TOA PAYOH",floor:"7",unit:"609",postal:"310015",contact:"6580264064",missingData:false},
+  {id:"AM54AH2602050347R",entity:"FBX",vehicleNo:"717FM",noticeNo:"AM54AH2602050347R",offenceDate:"05/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee5e852b498a952f7e832",riderName:"Aslinda Binte Mohamed Selamat",nric:"S7619407F",dob:"24/06/1976",gender:"Female",block:"182",street:"RIVERVALE CRESCENT",floor:"2",unit:"291",postal:"540182",contact:"6585403491",missingData:false},
+  {id:"AM24AI2602040225R",entity:"FBX",vehicleNo:"HN4",noticeNo:"AM24AI2602040225R",offenceDate:"04/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee2522bbb26c0a63814bb",riderName:"Marlina Binte Sapar",nric:"S9013749B",dob:"05/03/1990",gender:"Female",block:"547D",street:"SEGAR ROAD",floor:"5",unit:"29",postal:"674547",contact:"6580153369",missingData:false},
+  {id:"AM32AI2602110055R",entity:"FBX",vehicleNo:"HM77",noticeNo:"AM32AI2602110055R",offenceDate:"11/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee5e852b498a952f7e832",riderName:"Thia Yong Sheng Joel",nric:"S9344950I",dob:"09/11/1993",gender:"Male",block:"260C",street:"SENGKANG EAST WAY",floor:"2",unit:"460",postal:"540260",contact:"6592772218",missingData:false},
+  {id:"AM07AI2602150397R",entity:"FBX",vehicleNo:"HM75",noticeNo:"AM07AI2602150397R",offenceDate:"15/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee2522bbb26c0a63814bb",riderName:"Muhammad Nasri Bin Yussery",nric:"S9337376F",dob:"09/10/1993",gender:"Male",block:"284",street:"YISHUN AVENUE 6",floor:"9",unit:"120",postal:"760284",contact:"6587781993",missingData:false},
+  {id:"AM27AI2602150424R",entity:"FBX",vehicleNo:"HM75",noticeNo:"AM27AI2602150424R",offenceDate:"15/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee2522bbb26c0a63814bb",riderName:"Muhammad Nasri Bin Yussery",nric:"S9337376F",dob:"09/10/1993",gender:"Male",block:"284",street:"YISHUN AVENUE 6",floor:"9",unit:"120",postal:"760284",contact:"6587781993",missingData:false},
+  {id:"AM36AI2602150436R",entity:"FBX",vehicleNo:"HL54",noticeNo:"AM36AI2602150436R",offenceDate:"15/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee2522bbb26c0a63814bb",riderName:"Muhammad Izzuddin Bin Zaini",nric:"S9723374H",dob:"19/07/1997",gender:"Male",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6582489301",missingData:false},
+  {id:"AM11AH2602030101R",entity:"FBX",vehicleNo:"HL44",noticeNo:"AM11AH2602030101R",offenceDate:"03/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee5e852b498a952f7e832",riderName:"Siti Norshuhaiba Binti A Rashid",nric:"S9386721A",dob:"06/10/1993",gender:"Female",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6598572427",missingData:false},
+  {id:"AM60AI2602120184R",entity:"FBX",vehicleNo:"HM77",noticeNo:"AM60AI2602120184R",offenceDate:"12/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee5e852b498a952f7e832",riderName:"Thia Yong Sheng Joel",nric:"S9344950I",dob:"09/11/1993",gender:"Male",block:"260C",street:"SENGKANG EAST WAY",floor:"2",unit:"460",postal:"540260",contact:"6592772218",missingData:false},
+  {id:"AM36AI2602070219R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM36AI2602070219R",offenceDate:"07/02/2026",scanDate:"24/02/2026",expiryDate:"13/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69aee2522bbb26c0a63814bb",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM05A12602200281R",entity:"FBX",vehicleNo:"779FM",noticeNo:"AM05A12602200281R",offenceDate:"20/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Junaidah Binte Ali",nric:"S7200378J",dob:"07/01/1972",gender:"Female",block:"174C",street:"HOUGANG AVENUE 1",floor:"4",unit:"1585",postal:"530174",contact:"6589184667",missingData:false},
+  {id:"AM30A12602210425R",entity:"FBX",vehicleNo:"HM75",noticeNo:"AM30A12602210425R",offenceDate:"21/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Muhammad Nasri Bin Yussery",nric:"S9337376F",dob:"09/10/1993",gender:"Male",block:"284",street:"YISHUN AVENUE 6",floor:"9",unit:"120",postal:"760284",contact:"6587781993",missingData:false},
+  {id:"AM26A12602210418R",entity:"FBX",vehicleNo:"GV65",noticeNo:"AM26A12602210418R",offenceDate:"21/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Muhammad Shafiq Shadan Bin Ismail",nric:"S9907445J",dob:"13/03/1999",gender:"Male",block:"711",street:"JURONG WEST STREET 71",floor:"2",unit:"5",postal:"640711",contact:"6586285004",missingData:false},
+  {id:"AM18AI2602210406R",entity:"FBX",vehicleNo:"HL7",noticeNo:"AM18AI2602210406R",offenceDate:"21/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Zharina Binte Mohamed Jeddie",nric:"S7443656J",dob:"19/10/1974",gender:"Female",block:"9",street:"TECK WHYE LANE",floor:"2",unit:"262",postal:"680009",contact:"6589106687",missingData:false},
+  {id:"AM56A12602160093R",entity:"FBX",vehicleNo:"HL54",noticeNo:"AM56A12602160093R",offenceDate:"16/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Muhammad Izzuddin Bin Zaini",nric:"S9723374H",dob:"19/07/1997",gender:"Male",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6582489301",missingData:false},
+  {id:"AM05A12602180163R",entity:"FBX",vehicleNo:"HM75",noticeNo:"AM05A12602180163R",offenceDate:"18/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Muhammad Nasri Bin Yussery",nric:"S9337376F",dob:"09/10/1993",gender:"Male",block:"284",street:"YISHUN AVENUE 6",floor:"9",unit:"120",postal:"760284",contact:"6587781993",missingData:false},
+  {id:"AM26A12602160041R",entity:"FBX",vehicleNo:"GH44",noticeNo:"AM26A12602160041R",offenceDate:"16/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b9560f2721a6fb769d7f30",riderName:"Muhamad Masnoh Bin Johar",nric:"S8229108C",dob:"10/09/1982",gender:"Male",block:"804",street:"WOODLANDS STREET 81",floor:"2",unit:"39",postal:"730804",contact:"6589872619",missingData:false},
+  {id:"AM19A12602160031R",entity:"FBX",vehicleNo:"ES85",noticeNo:"AM19A12602160031R",offenceDate:"16/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b9560f2721a6fb769d7f30",riderName:"Nur Syahirah Ayu Binte Mohamed Ali",nric:"S9735481B",dob:"10/10/1997",gender:"Female",block:"248",street:"BANGKIT ROAD",floor:"3",unit:"278",postal:"670248",contact:"6596376909",missingData:false},
+  {id:"AM51A12602210466R",entity:"FBX",vehicleNo:"HN4",noticeNo:"AM51A12602210466R",offenceDate:"21/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Marlina Binte Sapar",nric:"S9013749B",dob:"05/03/1990",gender:"Female",block:"547D",street:"SEGAR ROAD",floor:"5",unit:"29",postal:"674547",contact:"6580153369",missingData:false},
+  {id:"AM57A12602190274R",entity:"FBX",vehicleNo:"FR96",noticeNo:"AM57A12602190274R",offenceDate:"19/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Mohammad Fauzie Bin Maroff",nric:"S8509056I",dob:"12/04/1985",gender:"Male",block:"52",street:"LORONG 6 TOA PAYOH",floor:"2",unit:"44",postal:"310052",contact:"89212028",missingData:false},
+  {id:"AM09A12602160009R",entity:"FBX",vehicleNo:"HL54",noticeNo:"AM09A12602160009R",offenceDate:"16/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Muhammad Izzuddin Bin Zaini",nric:"S9723374H",dob:"19/07/1997",gender:"Male",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6582489301",missingData:false},
+  {id:"AM37A12602160060R",entity:"FBX",vehicleNo:"HM77",noticeNo:"AM37A12602160060R",offenceDate:"16/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Thia Yong Sheng Joel",nric:"S9344950I",dob:"09/11/1993",gender:"Male",block:"260C",street:"SENGKANG EAST WAY",floor:"2",unit:"460",postal:"540260",contact:"6592772218",missingData:false},
+  {id:"AM07A12602210382R",entity:"FBX",vehicleNo:"779FM",noticeNo:"AM07A12602210382R",offenceDate:"21/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Junaidah Binte Ali",nric:"S7200378J",dob:"07/01/1972",gender:"Female",block:"174C",street:"HOUGANG AVENUE 1",floor:"4",unit:"1585",postal:"530174",contact:"6589184667",missingData:false},
+  {id:"AM09A12602210384R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM09A12602210384R",offenceDate:"21/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM57A12602170155R",entity:"FBX",vehicleNo:"GV90",noticeNo:"AM57A12602170155R",offenceDate:"17/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Norhayati Binte Mohamed Abdul Razzaq",nric:"S9245432J",dob:"07/12/1992",gender:"Female",block:"466",street:"ANG MO KIO AVENUE 10",floor:"2",unit:"1030",postal:"560466",contact:"85086327",missingData:false},
+  {id:"AM35A12602200343R",entity:"FBX",vehicleNo:"HL54",noticeNo:"AM35A12602200343R",offenceDate:"20/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Muhammad Izzuddin Bin Zaini",nric:"S9723374H",dob:"19/07/1997",gender:"Male",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6582489301",missingData:false},
+  {id:"AM36A12602200346R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM36A12602200346R",offenceDate:"20/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM18AI2602190242R",entity:"FBX",vehicleNo:"HN4",noticeNo:"AM18AI2602190242R",offenceDate:"19/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Marlina Binte Sapar",nric:"S9013749B",dob:"05/03/1990",gender:"Female",block:"547D",street:"SEGAR ROAD",floor:"5",unit:"29",postal:"674547",contact:"6580153369",missingData:false},
+  {id:"AM44A12602210457R",entity:"FBX",vehicleNo:"GY20",noticeNo:"AM44A12602210457R",offenceDate:"21/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Mazlinda Binte Mahfodz",nric:"S8439018F",dob:"17/12/1984",gender:"Female",block:"333",street:"KRETA AYER ROAD",floor:"16",unit:"20",postal:"80333",contact:"6597579624",missingData:false},
+  {id:"AM51A12602210465R",entity:"FBX",vehicleNo:"HL7",noticeNo:"AM51A12602210465R",offenceDate:"21/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b954df9ebfcd1d9d7d1cf1",riderName:"Zharina Binte Mohamed Jeddie",nric:"S7443656J",dob:"19/10/1974",gender:"Female",block:"9",street:"TECK WHYE LANE",floor:"2",unit:"262",postal:"680009",contact:"6589106687",missingData:false},
+  {id:"AM29A12602220533R",entity:"FBX",vehicleNo:"HM75",noticeNo:"AM29A12602220533R",offenceDate:"22/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Muhammad Nasri Bin Yussery",nric:"S9337376F",dob:"09/10/1993",gender:"Male",block:"284",street:"YISHUN AVENUE 6",floor:"9",unit:"120",postal:"760284",contact:"6587781993",missingData:false},
+  {id:"AM35A12602210439R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM35A12602210439R",offenceDate:"21/02/2026",scanDate:"04/03/2026",expiryDate:"20/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69b959c21d279cb6629f2914",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM29AJ2603110151R",entity:"FBX",vehicleNo:"HP43",noticeNo:"AM29AJ2603110151R",offenceDate:"11/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0e0a7cb01b2d3091bef6f",riderName:"Lee Choon Kheng Wilson",nric:"S7029344G",dob:"07/09/1970",gender:"Male",block:"128B",street:"CANBERRA STREET",floor:"10",unit:"548",postal:"752128",contact:"6585515782",missingData:false},
+  {id:"AM19AJ2603110133R",entity:"FBX",vehicleNo:"HR64",noticeNo:"AM19AJ2603110133R",offenceDate:"11/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c0ee6079260c333ced3b",riderName:"Muhammad Aiman Bin Sahar",nric:"T0228913F",dob:"07/09/2002",gender:"Male",block:"179",street:"BOON LAY DRIVE",floor:"03",unit:"452",postal:"640179",contact:"6584516030",missingData:false},
+  {id:"AM43AJ2603070491R",entity:"FBX",vehicleNo:"FT63",noticeNo:"AM43AJ2603070491R",offenceDate:"07/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Aaron Niklaus Haider Han",nric:"S9922613G",dob:"23/07/1999",gender:"Male",block:"672A",street:"YISHUN AVENUE 4",floor:"2",unit:"510",postal:"761672",contact:"6585315992",missingData:false},
+  {id:"AM23AJ2603070452R",entity:"FBX",vehicleNo:"GX74",noticeNo:"AM23AJ2603070452R",offenceDate:"07/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Apps Kelly Geraldo",nric:"S8709480D",dob:"08/04/1987",gender:"Male",block:"941",street:"JURONG WEST STREET 91",floor:"7",unit:"481",postal:"640941",contact:"6585984655",missingData:false},
+  {id:"AM28AJ2603050264R",entity:"FBX",vehicleNo:"GW44",noticeNo:"AM28AJ2603050264R",offenceDate:"05/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Mohamed Ma Roumelia Joy Botin",nric:"S8057785J",dob:"30/06/1980",gender:"Male",block:"999A",street:"BUANGKOK CRESCENT",floor:"8",unit:"793",postal:"531999",contact:"6588156300",missingData:false},
+  {id:"AM13AJ2603080550R",entity:"FBX",vehicleNo:"HR54",noticeNo:"AM13AJ2603080550R",offenceDate:"08/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Noraisah Binte Mohamed",nric:"S8341695E",dob:"30/12/1983",gender:"Female",block:"90",street:"Redhill Close",floor:"06",unit:"428",postal:"150090",contact:"6589139974",missingData:false},
+  {id:"AM45A12603060379R",entity:"FBX",vehicleNo:"FT63",noticeNo:"AM45A12603060379R",offenceDate:"06/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Aaron Niklaus Haider Han",nric:"S9922613G",dob:"23/07/1999",gender:"Male",block:"672A",street:"YISHUN AVENUE 4",floor:"2",unit:"510",postal:"761672",contact:"6585315992",missingData:false},
+  {id:"AM44A12603060378R",entity:"FBX",vehicleNo:"GY20",noticeNo:"AM44A12603060378R",offenceDate:"06/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Mazlinda Binte Mahfodz",nric:"S8439018F",dob:"17/12/1984",gender:"Female",block:"333",street:"KRETA AYER ROAD",floor:"16",unit:"20",postal:"80333",contact:"6597579624",missingData:false},
+  {id:"AM51AJ2603080614R",entity:"FBX",vehicleNo:"GV12",noticeNo:"AM51AJ2603080614R",offenceDate:"08/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Mohammad Danish Bin Mohammad Azi",nric:"T0326668G",dob:"12/09/2003",gender:"Male",block:"15",street:"LORONG 7 TOA PAYOH",floor:"7",unit:"609",postal:"310015",contact:"6580264064",missingData:false},
+  {id:"AM25AJ2603090682R",entity:"FBX",vehicleNo:"GY5",noticeNo:"AM25AJ2603090682R",offenceDate:"09/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Nelly Syafarina Binte Abdullah",nric:"T0000132A",dob:"02/01/2000",gender:"Female",block:"185A",street:"Woodlands St 13",floor:"06",unit:"713",postal:"731185",contact:"6589462551",missingData:false},
+  {id:"AM54AJ2603130167R",entity:"FBX",vehicleNo:"717FM",noticeNo:"AM54AJ2603130167R",offenceDate:"13/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Aslinda Binte Mohamed Selamat",nric:"S7619407F",dob:"24/06/1976",gender:"Female",block:"182",street:"RIVERVALE CRESCENT",floor:"2",unit:"291",postal:"540182",contact:"6585403491",missingData:false},
+  {id:"AM09AJ2603140015R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM09AJ2603140015R",offenceDate:"14/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3bd7fc6b8769cab91fa9e",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM27AJ2603140044R",entity:"FBX",vehicleNo:"779FM",noticeNo:"AM27AJ2603140044R",offenceDate:"14/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2249a3eb986cdedbe6a6b",riderName:"Junaidah Binte Ali",nric:"S7200378J",dob:"07/01/1972",gender:"Female",block:"174C",street:"HOUGANG AVENUE 1",floor:"4",unit:"1585",postal:"530174",contact:"6589184667",missingData:false},
+  {id:"AM54AJ2603140082R",entity:"FBX",vehicleNo:"HM77",noticeNo:"AM54AJ2603140082R",offenceDate:"14/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d28ebbb1e608096571f038",riderName:"Thia Yong Sheng Joel",nric:"S9344950I",dob:"09/11/1993",gender:"Male",block:"260C",street:"SENGKANG EAST WAY",floor:"2",unit:"460",postal:"540260",contact:"6592772218",missingData:false},
+  {id:"AM17AJ2603120027R",entity:"FBX",vehicleNo:"HR64",noticeNo:"AM17AJ2603120027R",offenceDate:"12/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c0ee6079260c333ced3b",riderName:"Muhammad Aiman Bin Sahar",nric:"T0228913F",dob:"07/09/2002",gender:"Male",block:"179",street:"BOON LAY DRIVE",floor:"03",unit:"452",postal:"640179",contact:"6584516030",missingData:false},
+  {id:"AM06AJ2603150098R",entity:"FBX",vehicleNo:"GY5",noticeNo:"AM06AJ2603150098R",offenceDate:"15/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c0ee6079260c333ced3b",riderName:"Nelly Syafarina Binte Abdullah",nric:"T0000132A",dob:"02/01/2000",gender:"Female",block:"185A",street:"Woodlands St 13",floor:"06",unit:"713",postal:"731185",contact:"6589462551",missingData:false},
+  {id:"AM30AJ2603130128R",entity:"FBX",vehicleNo:"972FM",noticeNo:"AM30AJ2603130128R",offenceDate:"13/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Tan Jun Xian",nric:"T0409951B",dob:"02/04/2004",gender:"Male",block:"408",street:"SEMBAWANG DRIVE",floor:"11",unit:"800",postal:"750408",contact:"6588381017",missingData:false},
+  {id:"AM18AJ2603100038R",entity:"FBX",vehicleNo:"HM9",noticeNo:"AM18AJ2603100038R",offenceDate:"10/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c0ee6079260c333ced3b",riderName:"Md Nazri Shufri Bin Rahmat",nric:"S8627354C",dob:"23/09/1986",gender:"Female",block:"447A",street:"BUKIT BATOK WEST AVENUE 9",floor:"02",unit:"142",postal:"651447",contact:"6591395020",missingData:false},
+  {id:"AM46AJ2603130154R",entity:"FBX",vehicleNo:"GY64",noticeNo:"AM46AJ2603130154R",offenceDate:"13/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d28ebbb1e608096571f038",riderName:"Muhammad Nazri Bin Mohamad Zulkiflee",nric:"S8512619I",dob:"24/02/1985",gender:"Male",block:"55",street:"LORONG 5 TOA PAYOH",floor:"9",unit:"178",postal:"310055",contact:"6588522402",missingData:false},
+  {id:"AM53AJ2603050301R",entity:"FBX",vehicleNo:"HM75",noticeNo:"AM53AJ2603050301R",offenceDate:"05/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d28ebbb1e608096571f038",riderName:"Muhammad Nasri Bin Yussery",nric:"S9337376F",dob:"09/10/1993",gender:"Male",block:"284",street:"YISHUN AVENUE 6",floor:"9",unit:"120",postal:"760284",contact:"6587781993",missingData:false},
+  {id:"AM53AJ2603050304R",entity:"FBX",vehicleNo:"779FM",noticeNo:"AM53AJ2603050304R",offenceDate:"05/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2249a3eb986cdedbe6a6b",riderName:"Junaidah Binte Ali",nric:"S7200378J",dob:"07/01/1972",gender:"Female",block:"174C",street:"HOUGANG AVENUE 1",floor:"4",unit:"1585",postal:"530174",contact:"6589184667",missingData:false},
+  {id:"AM46A12603040205R",entity:"FBX",vehicleNo:"FT63",noticeNo:"AM46A12603040205R",offenceDate:"04/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c0ee6079260c333ced3b",riderName:"Aaron Niklaus Haider Han",nric:"S9922613G",dob:"23/07/1999",gender:"Male",block:"672A",street:"YISHUN AVENUE 4",floor:"2",unit:"510",postal:"761672",contact:"6585315992",missingData:false},
+  {id:"AM53AJ2603040218R",entity:"FBX",vehicleNo:"HP34",noticeNo:"AM53AJ2603040218R",offenceDate:"04/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0da80cb01b2d3091ba282",riderName:"Muhammad Farhan Bin Zazali",nric:"S8932965E",dob:"30/09/1989",gender:"Male",block:"55",street:"Toa Payoh Lorong 5",floor:"02",unit:"178",postal:"310055",contact:"6582817843",missingData:false},
+  {id:"AM54AJ2603070511R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM54AJ2603070511R",offenceDate:"07/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0da80cb01b2d3091ba282",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM45AJ2603120064R",entity:"FBX",vehicleNo:"GV99",noticeNo:"AM45AJ2603120064R",offenceDate:"12/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d28ebbb1e608096571f038",riderName:"Muhammad Hairi Rahmat",nric:"S8210003B",dob:"16/04/1982",gender:"Male",block:"188",street:"BOON LAY DRIVE",floor:"1",unit:"92",postal:"640188",contact:"85291549",missingData:false},
+  {id:"AM28AJ2603130124R",entity:"FBX",vehicleNo:"HN79",noticeNo:"AM28AJ2603130124R",offenceDate:"13/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c787ee1d9638c8468430",riderName:"Mohammad Firdaus Bin Sulaiman",nric:"S8836937H",dob:"30/09/1988",gender:"Male",block:"366",street:"YISHUN RING ROAD",floor:"5",unit:"1506",postal:"760366",contact:"6585158599",missingData:false},
+  {id:"AM29AJ2603150131R",entity:"FBX",vehicleNo:"779FM",noticeNo:"AM29AJ2603150131R",offenceDate:"15/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2249a3eb986cdedbe6a6b",riderName:"Junaidah Binte Ali",nric:"S7200378J",dob:"07/01/1972",gender:"Female",block:"174C",street:"HOUGANG AVENUE 1",floor:"4",unit:"1585",postal:"530174",contact:"6589184667",missingData:false},
+  {id:"AM54AJ2603150168R",entity:"FBX",vehicleNo:"729FM",noticeNo:"AM54AJ2603150168R",offenceDate:"15/03/2026",scanDate:"23/03/2026",expiryDate:"06/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2249a3eb986cdedbe6a6b",riderName:"Mohammed Azri Bin Abdul Jalil",nric:"S8435629H",dob:"03/11/1984",gender:"Male",block:"182",street:"RIVERVALE CRESCENT",floor:"2",unit:"287",postal:"540182",contact:"6580709228",missingData:false},
+  {id:"AM09AJ2603210013R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM09AJ2603210013R",offenceDate:"21/03/2026",scanDate:"30/03/2026",expiryDate:"13/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2873ac4e81b2eac897d47",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM36AJ2603220202R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM36AJ2603220202R",offenceDate:"22/03/2026",scanDate:"30/03/2026",expiryDate:"13/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2873ac4e81b2eac897d47",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM53AJ2603220222R",entity:"FBX",vehicleNo:"779FM",noticeNo:"AM53AJ2603220222R",offenceDate:"22/03/2026",scanDate:"30/03/2026",expiryDate:"13/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2249a3eb986cdedbe6a6b",riderName:"Junaidah Binte Ali",nric:"S7200378J",dob:"07/01/1972",gender:"Female",block:"174C",street:"HOUGANG AVENUE 1",floor:"4",unit:"1585",postal:"530174",contact:"6589184667",missingData:false},
+  {id:"AM05AJ2603010550R",entity:"FBX",vehicleNo:"GY5",noticeNo:"AM05AJ2603010550R",offenceDate:"01/03/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c0ee6079260c333ced3b",riderName:"Nelly Syafarina Binte Abdullah",nric:"T0000132A",dob:"02/01/2000",gender:"Female",block:"185A",street:"Woodlands St 13",floor:"06",unit:"713",postal:"731185",contact:"6589462551",missingData:false},
+  {id:"AM10A12602270358R",entity:"FBX",vehicleNo:"FT21",noticeNo:"AM10A12602270358R",offenceDate:"27/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c787ee1d9638c8468430",riderName:"Rafidah Binte Rahmat",nric:"S8503866D",dob:"14/02/1985",gender:"Female",block:"469",street:"ANG MO KIO AVENUE 10",floor:"3",unit:"952",postal:"560469",contact:"6589218132",missingData:false},
+  {id:"AM32A12602260309R",entity:"FBX",vehicleNo:"HP72",noticeNo:"AM32A12602260309R",offenceDate:"26/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c787ee1d9638c8468430",riderName:"Muhammad Fauzi Bin Mis Adi",nric:"S8739746G",dob:"06/12/1987",gender:"Male",block:"476B",street:"UPPER SERANGOON VIEW",floor:"02",unit:"520",postal:"532476",contact:"6581816404",missingData:false},
+  {id:"AM23A12602260287R",entity:"FBX",vehicleNo:"GY62",noticeNo:"AM23A12602260287R",offenceDate:"26/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d28ebbb1e608096571f038",riderName:"Hanafie Bin Dolklifie",nric:"S8214329G",dob:"13/05/1982",gender:"Male",block:"191",street:"BOON LAY DRIVE",floor:"2",unit:"134",postal:"640191",contact:"6589193069",missingData:false},
+  {id:"AM17AJ2603060339R",entity:"FBX",vehicleNo:"GX74",noticeNo:"AM17AJ2603060339R",offenceDate:"06/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c787ee1d9638c8468430",riderName:"Apps Kelly Geraldo",nric:"S8709480D",dob:"08/04/1987",gender:"Male",block:"941",street:"JURONG WEST STREET 91",floor:"7",unit:"481",postal:"640941",contact:"6585984655",missingData:false},
+  {id:"AM18AJ2603060340R",entity:"FBX",vehicleNo:"HS3",noticeNo:"AM18AJ2603060340R",offenceDate:"06/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c787ee1d9638c8468430",riderName:"Muhammad Faiz Suhail Bin Rudin",nric:"S9221963A",dob:"24/06/1992",gender:"Male",block:"285",street:"CHOA CHU KANG AVENUE 3",floor:"02",unit:"304",postal:"680285",contact:"6593440842",missingData:false},
+  {id:"AM36A12602230047R",entity:"FBX",vehicleNo:"HM6",noticeNo:"AM36A12602230047R",offenceDate:"23/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2873ac4e81b2eac897d47",riderName:"Fauzi Lee Maengkom",nric:"S8905438I",dob:"14021989",gender:"Male",block:"15",street:"MARINE TERRACE",floor:"14",unit:"26",postal:"440015",contact:"6587919055",missingData:false},
+  {id:"AM60A12603010628R",entity:"FBX",vehicleNo:"HM77",noticeNo:"AM60A12603010628R",offenceDate:"01/03/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2873ac4e81b2eac897d47",riderName:"Thia Yong Sheng Joel",nric:"S9344950I",dob:"09/11/1993",gender:"Male",block:"260C",street:"SENGKANG EAST WAY",floor:"2",unit:"460",postal:"540260",contact:"6592772218",missingData:false},
+  {id:"AM32AG2601050055R",entity:"FBX",vehicleNo:"GU87",noticeNo:"AM32AG2601050055R",offenceDate:"05/01/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0da80cb01b2d3091ba282",riderName:"Muhammad Daniel Bin Abdullah",nric:"T0411216J",dob:"15/04/2004",gender:"Male",block:"5",street:"MARSILING DRIVE",floor:"5",unit:"49",postal:"730005",contact:"6580570429",missingData:false},
+  {id:"AM30A12602250208R",entity:"FBX",vehicleNo:"HM75",noticeNo:"AM30A12602250208R",offenceDate:"25/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d28ebbb1e608096571f038",riderName:"Muhammad Nasri Bin Yussery",nric:"S9337376F",dob:"09/10/1993",gender:"Male",block:"284",street:"YISHUN AVENUE 6",floor:"9",unit:"120",postal:"760284",contact:"6587781993",missingData:false},
+  {id:"AM51A12602240147R",entity:"FBX",vehicleNo:"HN4",noticeNo:"AM51A12602240147R",offenceDate:"24/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c787ee1d9638c8468430",riderName:"Marlina Binte Sapar",nric:"S9013749B",dob:"05/03/1990",gender:"Female",block:"547D",street:"SEGAR ROAD",floor:"5",unit:"29",postal:"674547",contact:"6580153369",missingData:false},
+  {id:"AM34A12602280506R",entity:"FBX",vehicleNo:"HL44",noticeNo:"AM34A12602280506R",offenceDate:"28/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2249a3eb986cdedbe6a6b",riderName:"Siti Norshuhaiba Binti A Rashid",nric:"S9386721A",dob:"06/10/1993",gender:"Female",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6598572427",missingData:false},
+  {id:"AM34A12602280505R",entity:"FBX",vehicleNo:"HL54",noticeNo:"AM34A12602280505R",offenceDate:"28/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d28ebbb1e608096571f038",riderName:"Muhammad Izzuddin Bin Zaini",nric:"S9723374H",dob:"19/07/1997",gender:"Male",block:"429A",street:"BEDOK NORTH ROAD",floor:"6",unit:"393",postal:"461429",contact:"6582489301",missingData:false},
+  {id:"AM32A12602280500R",entity:"FBX",vehicleNo:"HM77",noticeNo:"AM32A12602280500R",offenceDate:"28/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2873ac4e81b2eac897d47",riderName:"Thia Yong Sheng Joel",nric:"S9344950I",dob:"09/11/1993",gender:"Male",block:"260C",street:"SENGKANG EAST WAY",floor:"2",unit:"460",postal:"540260",contact:"6592772218",missingData:false},
+  {id:"AM31A12602280497R",entity:"FBX",vehicleNo:"779FM",noticeNo:"AM31A12602280497R",offenceDate:"28/02/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2249a3eb986cdedbe6a6b",riderName:"Junaidah Binte Ali",nric:"S7200378J",dob:"07/01/1972",gender:"Female",block:"174C",street:"HOUGANG AVENUE 1",floor:"4",unit:"1585",postal:"530174",contact:"6589184667",missingData:false},
+  {id:"AM30A12602150427R AND AM30A12602180188R",entity:"FBX",vehicleNo:"972FM",noticeNo:"AM30A12602150427R AND AM30A12602180188R",offenceDate:"N/A",scanDate:"18/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2873ac4e81b2eac897d47",riderName:"Tan Jun Xian",nric:"T0409951B",dob:"02/04/2004",gender:"Male",block:"408",street:"SEMBAWANG DRIVE",floor:"11",unit:"800",postal:"750408",contact:"6588381017",missingData:false},
+  {id:"AM27A12603010582R",entity:"FBX",vehicleNo:"HM75",noticeNo:"AM27A12603010582R",offenceDate:"01/03/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d28ebbb1e608096571f038",riderName:"Muhammad Nasri Bin Yussery",nric:"S9337376F",dob:"09/10/1993",gender:"Male",block:"284",street:"YISHUN AVENUE 6",floor:"9",unit:"120",postal:"760284",contact:"6587781993",missingData:false},
+  {id:"AM27A12603010580R",entity:"FBX",vehicleNo:"779FM",noticeNo:"AM27A12603010580R",offenceDate:"01/03/2026",scanDate:"12/03/2026",expiryDate:"30/03/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2249a3eb986cdedbe6a6b",riderName:"Junaidah Binte Ali",nric:"S7200378J",dob:"07/01/1972",gender:"Female",block:"174C",street:"HOUGANG AVENUE 1",floor:"4",unit:"1585",postal:"530174",contact:"6589184667",missingData:false},
+  {id:"AM26AJ2603180048R",entity:"FBX",vehicleNo:"HP43",noticeNo:"AM26AJ2603180048R",offenceDate:"18/03/2026",scanDate:"26/03/2026",expiryDate:"09/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0e0a7cb01b2d3091bef6f",riderName:"Lee Choon Kheng Wilson",nric:"S7029344G",dob:"07/09/1970",gender:"Male",block:"128B",street:"CANBERRA STREET",floor:"10",unit:"548",postal:"752128",contact:"6585515782",missingData:false},
+  {id:"AM28AJ2603160061R",entity:"FBX",vehicleNo:"971FM",noticeNo:"AM28AJ2603160061R",offenceDate:"16/03/2026",scanDate:"24/03/2026",expiryDate:"07/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Mohammad Danni Bin Baba",nric:"S8027799G",dob:"09/09/1980",gender:"Male",block:"991A",street:"BUANGKOK LINK",floor:"2",unit:"201",postal:"531991",contact:"6589214418",missingData:false},
+  {id:"AM27AJ2603090689R",entity:"FBX",vehicleNo:"HP43",noticeNo:"AM27AJ2603090689R",offenceDate:"09/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0e0a7cb01b2d3091bef6f",riderName:"Lee Choon Kheng Wilson",nric:"S7029344G",dob:"07/09/1970",gender:"Male",block:"128B",street:"CANBERRA STREET",floor:"10",unit:"548",postal:"752128",contact:"6585515782",missingData:false},
+  {id:"AM26AJ2603090686R",entity:"FBX",vehicleNo:"GY5",noticeNo:"AM26AJ2603090686R",offenceDate:"09/03/2026",scanDate:"20/03/2026",expiryDate:"03/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c0ee6079260c333ced3b",riderName:"Nelly Syafarina Binte Abdullah",nric:"T0000132A",dob:"02/01/2000",gender:"Female",block:"185A",street:"Woodlands St 13",floor:"06",unit:"713",postal:"731185",contact:"6589462551",missingData:false},
+  {id:"AM58AJ2603190110R",entity:"FBX",vehicleNo:"GX33",noticeNo:"AM58AJ2603190110R",offenceDate:"19/03/2026",scanDate:"27/03/2026",expiryDate:"10/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Teng Qing Yan",nric:"S9022999J",dob:"26/06/1990",gender:"Male",block:"36",street:"LORONG 5 TOA PAYOH",floor:"10",unit:"343",postal:"310036",contact:"6588436421",missingData:false},
+  {id:"AM48AJ2603170078R",entity:"FBX",vehicleNo:"GZ95",noticeNo:"AM48AJ2603170078R",offenceDate:"17/03/2026",scanDate:"26/03/2026",expiryDate:"09/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Bernard Noel",nric:"S8101265B",dob:"09/01/1981",gender:"Male",block:"104",street:"Potong Pasir Avenue 1",floor:"02",unit:"406",postal:"350104",contact:"6597582081",missingData:false},
+  {id:"AM05AJ2603170003R",entity:"FBX",vehicleNo:"HR53",noticeNo:"AM05AJ2603170003R",offenceDate:"17/03/2026",scanDate:"26/03/2026",expiryDate:"09/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Nur Mukarramah Binte Sam Dahari",nric:"S9814681D",dob:"12/05/1998",gender:"Female",block:"512",street:"WELLINGTON CIRCLE",floor:"4",unit:"10",postal:"750512",contact:"6587684457",missingData:false},
+  {id:"AM26AJ2603180047R",entity:"FBX",vehicleNo:"HQ24",noticeNo:"AM26AJ2603180047R",offenceDate:"18/03/2026",scanDate:"26/03/2026",expiryDate:"09/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0e0a7cb01b2d3091bef6f",riderName:"Nany Triyana Dewi Binte Nawawi",nric:"S8031142G",dob:"24/09/1980",gender:"Female",block:"621",street:"WOODLANDS DRIVE 52",floor:"11",unit:"50",postal:"730621",contact:"6598235871",missingData:false},
+  {id:"AM07AJ2603180013R",entity:"FBX",vehicleNo:"HL78",noticeNo:"AM07AJ2603180013R",offenceDate:"18/03/2026",scanDate:"26/03/2026",expiryDate:"09/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Nuriswatty Binte Supani",nric:"T0437184J",dob:"19/11/2004",gender:"Female",block:"150",street:"LORONG 1 TOA PAYOH",floor:"2",unit:"1005",postal:"310150",contact:"6591394432",missingData:false},
+  {id:"AM05AJ2603180008R",entity:"FBX",vehicleNo:"GV4",noticeNo:"AM05AJ2603180008R",offenceDate:"18/03/2026",scanDate:"26/03/2026",expiryDate:"09/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Muhammad Shazryan Bin Abdullah",nric:"T0310224B",dob:"15/04/2003",gender:"Male",block:"180B",street:"MARSILING ROAD",floor:"11",unit:"2214",postal:"732180",contact:"6587922640",missingData:false},
+  {id:"AM01AJ2603180001R",entity:"FBX",vehicleNo:"HR64",noticeNo:"AM01AJ2603180001R",offenceDate:"18/03/2026",scanDate:"26/03/2026",expiryDate:"09/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c0ee6079260c333ced3b",riderName:"Muhammad Aiman Bin Sahar",nric:"T0228913F",dob:"07/09/2002",gender:"Male",block:"179",street:"BOON LAY DRIVE",floor:"03",unit:"452",postal:"640179",contact:"6584516030",missingData:false},
+  {id:"AM26AJ2603160055R",entity:"FBX",vehicleNo:"HQ24",noticeNo:"AM26AJ2603160055R",offenceDate:"16/03/2026",scanDate:"24/03/2026",expiryDate:"07/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0e0a7cb01b2d3091bef6f",riderName:"Nany Triyana Dewi Binte Nawawi",nric:"S8031142G",dob:"24/09/1980",gender:"Female",block:"621",street:"WOODLANDS DRIVE 52",floor:"11",unit:"50",postal:"730621",contact:"6598235871",missingData:false},
+  {id:"AM05AJ2603160004R",entity:"FBX",vehicleNo:"972FM",noticeNo:"AM05AJ2603160004R",offenceDate:"16/03/2026",scanDate:"24/03/2026",expiryDate:"07/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d2873ac4e81b2eac897d47",riderName:"Tan Jun Xian",nric:"T0409951B",dob:"02/04/2004",gender:"Male",block:"408",street:"SEMBAWANG DRIVE",floor:"11",unit:"800",postal:"750408",contact:"6588381017",missingData:false},
+  {id:"AM08AJ2603210009R",entity:"FBX",vehicleNo:"HQ24",noticeNo:"AM08AJ2603210009R",offenceDate:"21/03/2026",scanDate:"30/03/2026",expiryDate:"13/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0e0a7cb01b2d3091bef6f",riderName:"Nany Triyana Dewi Binte Nawawi",nric:"S8031142G",dob:"24/09/1980",gender:"Female",block:"621",street:"WOODLANDS DRIVE 52",floor:"11",unit:"50",postal:"730621",contact:"6598235871",missingData:false},
+  {id:"AM06AJ2603190010R",entity:"FBX",vehicleNo:"HQ24",noticeNo:"AM06AJ2603190010R",offenceDate:"19/03/2026",scanDate:"27/03/2026",expiryDate:"10/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0e0a7cb01b2d3091bef6f",riderName:"Nany Triyana Dewi Binte Nawawi",nric:"S8031142G",dob:"24/09/1980",gender:"Female",block:"621",street:"WOODLANDS DRIVE 52",floor:"11",unit:"50",postal:"730621",contact:"6598235871",missingData:false},
+  {id:"AM30AJ2603200171R",entity:"FBX",vehicleNo:"HQ24",noticeNo:"AM30AJ2603200171R",offenceDate:"20/03/2026",scanDate:"27/03/2026",expiryDate:"10/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d0e0a7cb01b2d3091bef6f",riderName:"Nany Triyana Dewi Binte Nawawi",nric:"S8031142G",dob:"24/09/1980",gender:"Female",block:"621",street:"WOODLANDS DRIVE 52",floor:"11",unit:"50",postal:"730621",contact:"6598235871",missingData:false},
+  {id:"AM17AJ2603200155R",entity:"FBX",vehicleNo:"GX74",noticeNo:"AM17AJ2603200155R",offenceDate:"20/03/2026",scanDate:"27/03/2026",expiryDate:"10/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Apps Kelly Geraldo",nric:"S8709480D",dob:"08/04/1987",gender:"Male",block:"941",street:"JURONG WEST STREET 91",floor:"7",unit:"481",postal:"640941",contact:"6585984655",missingData:false},
+  {id:"AM34AJ2603170052R",entity:"FBX",vehicleNo:"HQ14",noticeNo:"AM34AJ2603170052R",offenceDate:"17/03/2026",scanDate:"26/03/2026",expiryDate:"09/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Siti Nuraisyah Kassim",nric:"S9931886D",dob:"02/10/1999",gender:"Female",block:"78",street:"REDHILL LANE",floor:"7",unit:"17",postal:"150078",contact:"6590842670",missingData:false},
+  {id:"AM31AJ2603170048R",entity:"FBX",vehicleNo:"HS4",noticeNo:"AM31AJ2603170048R",offenceDate:"17/03/2026",scanDate:"26/03/2026",expiryDate:"09/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3c494571da21f7ea2b1fc",riderName:"Seah Swee Siang",nric:"S9708196D",dob:"10/03/1997",gender:"Male",block:"315B",street:"YISHUN AVENUE 9",floor:"13",unit:"194",postal:"762315",contact:"6581184113",missingData:false},
+  {id:"AM05AJ2602280453R",entity:"FBX",vehicleNo:"972FM",noticeNo:"AM05AJ2602280453R",offenceDate:"28/02/2026",scanDate:"31/03/2026",expiryDate:"14/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3cb775184f3390c7849ce",riderName:"Tan Jun Xian",nric:"T0409951B",dob:"02/04/2004",gender:"Male",block:"408",street:"SEMBAWANG DRIVE",floor:"11",unit:"800",postal:"750408",contact:"6588381017",missingData:false},
+  {id:"AM53A12602230057R",entity:"FBX",vehicleNo:"972FM",noticeNo:"AM53A12602230057R",offenceDate:"23/02/2026",scanDate:"31/03/2026",expiryDate:"14/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69d3cb775184f3390c7849ce",riderName:"Tan Jun Xian",nric:"T0409951B",dob:"02/04/2004",gender:"Male",block:"408",street:"SEMBAWANG DRIVE",floor:"11",unit:"800",postal:"750408",contact:"6588381017",missingData:false},
+  {id:"AM40AJ2603260031R",entity:"FBX",vehicleNo:"501FM",noticeNo:"AM40AJ2603260031R",offenceDate:"26/03/2026",scanDate:"08/04/2026",expiryDate:"22/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69dcfa08de44f423f35cb6a8",riderName:"Muhammad Suhairi Bin Badron",nric:"S8738002E",dob:"07/11/1987",gender:"Male",block:"174D",street:"HOUGANG AVENUE 1",floor:"2",unit:"1619",postal:"539174",contact:"6583024786",missingData:false},
+  {id:"AM37AJ2603260025R",entity:"FBX",vehicleNo:"501FM",noticeNo:"AM37AJ2603260025R",offenceDate:"26/03/2026",scanDate:"08/04/2026",expiryDate:"22/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69dcfa08de44f423f35cb6a8",riderName:"Muhammad Suhairi Bin Badron",nric:"S8738002E",dob:"07/11/1987",gender:"Male",block:"174D",street:"HOUGANG AVENUE 1",floor:"2",unit:"1619",postal:"539174",contact:"6583024786",missingData:false},
+  {id:"AM43AJ2603280137R",entity:"FBX",vehicleNo:"HN40",noticeNo:"AM43AJ2603280137R",offenceDate:"28/03/2026",scanDate:"08/04/2026",expiryDate:"22/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69dcfa08de44f423f35cb6a8",riderName:"Gary Ng Zhi Xiang",nric:"T0307843J",dob:"25/03/2003",gender:"Male",block:"63",street:"KALLANG BAHRU",floor:"02",unit:"439",postal:"330063",contact:"6588912343",missingData:false},
+  {id:"AM58AJ2603300226R",entity:"FBX",vehicleNo:"HL41",noticeNo:"AM58AJ2603300226R",offenceDate:"30/03/2026",scanDate:"08/04/2026",expiryDate:"22/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69dcfa08de44f423f35cb6a8",riderName:"Mohammed Ashraf Bin Rahamansha Marican",nric:"S9006997G",dob:"06/03/1990",gender:"Male",block:"126",street:"LORONG 1 TOA PAYOH",floor:"03",unit:"571",postal:"310126",contact:"6588927613",missingData:false},
+  {id:"AM27AJ2603250056R",entity:"FBX",vehicleNo:"745FM",noticeNo:"AM27AJ2603250056R",offenceDate:"25/03/2026",scanDate:"02/04/2026",expiryDate:"16/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69dcfa08de44f423f35cb6a8",riderName:"Nur Shahiera Binte Masirwan",nric:"T0141431Z",dob:"01/12/2001",gender:"Female",block:"108",street:"YISHUN RING ROAD",floor:"9",unit:"299",postal:"760108",contact:"6593404409",missingData:false},
+  {id:"AM53AJ2603250094R",entity:"FBX",vehicleNo:"HM75",noticeNo:"AM53AJ2603250094R",offenceDate:"25/03/2026",scanDate:"02/04/2026",expiryDate:"16/04/2026",courtDate:null,status:"furnished",colZ:"Response ID: 69dcfa08de44f423f35cb6a8",riderName:"Muhammad Nasri Bin Yussery",nric:"S9337376F",dob:"09/10/1993",gender:"Male",block:"284",street:"YISHUN AVENUE 6",floor:"9",unit:"120",postal:"760284",contact:"6587781993",missingData:false},
+];
+const T = {
+  bg:"#f4f6f9", surface:"#ffffff", border:"#e2e7ef", borderMd:"#d0d7e3",
+  text:"#111827", textMd:"#374151", textSm:"#6b7280", textXs:"#9ca3af",
+};
+
+const ENTITY_CFG = {
+  FBX:   { label:"FUNDBOX", color:"#0369a1", light:"#e0f2fe", dot:"#0ea5e9" },
+  EKO:   { label:"EKO",     color:"#15803d", light:"#dcfce7", dot:"#22c55e" },
+  MOTO:  { label:"MOTO",    color:"#c2410c", light:"#ffedd5", dot:"#f97316" },
+  EUQPL: { label:"EUQPL",   color:"#7c3aed", light:"#ede9fe", dot:"#a78bfa" },
+};
+
+const STATUS_CFG = {
+  court:      { label:"COURT",      color:"#6d28d9", light:"#ede9fe", border:"#c4b5fd", icon:"🏛" },
+  expired:    { label:"EXPIRED",    color:"#b91c1c", light:"#fef2f2", border:"#fca5a5", icon:"🚫" },
+  pending:    { label:"PENDING",    color:"#92400e", light:"#fefce8", border:"#fde68a", icon:"📋" },
+  furnished:  { label:"FURNISHED",  color:"#14532d", light:"#f0fdf4", border:"#86efac", icon:"✅" },
+  suspicious: { label:"SUSPICIOUS", color:"#b45309", light:"#fffbeb", border:"#fcd34d", icon:"⚠️" },
+};
+
+const STATUS_ORDER = ["court","expired","pending","furnished"];
+
+// Suspicious: rider home postal district vs offence postal (first 2 digits)
+function isSuspicious(n) {
+  if (!n.postal || !n.offencePostal) return false;
+  const homeDist = parseInt(n.postal.substring(0,2));
+  const offDist  = parseInt(n.offencePostal.substring(0,2));
+  return Math.abs(homeDist - offDist) >= 10;
+}
+
+const LTA_FIELDS = [
+  { label:"Notice Number",              key:"noticeNo"    },
+  { label:"Vehicle / Device Number",    key:"vehicleNo"   },
+  { label:"Offence Date (DD/MM/YYYY)",  key:"offenceDate" },
+  { label:"Rider's Full Name",          key:"riderName"   },
+  { label:"Full NRIC / Passport / FIN", key:"nric"        },
+  { label:"Date of Birth (DD/MM/YYYY)", key:"dob"         },
+  { label:"Gender",                     key:"gender"      },
+  { label:"Block / House Number",       key:"block"       },
+  { label:"Street Name",                key:"street"      },
+  { label:"Floor Number",               key:"floor"       },
+  { label:"Unit Number",                key:"unit"        },
+  { label:"Postal Code",                key:"postal"      },
+  { label:"Rider's Mobile Number",      key:"contact"     },
+  { label:"Rider's Email (optional)",   key:null          },
+];
+
+function toTSV(n) {
+  return LTA_FIELDS.map(f => f.key ? (n[f.key] || "") : "").join("\t");
+}
+
+function daysUntil(ds) {
+  if (!ds) return null;
+  const [d,m,y] = ds.split("/");
+  return Math.ceil((new Date(`${y}-${m}-${d}`) - new Date()) / 86400000);
+}
+
+// ─── ENTITY PILL ─────────────────────────────────────────────────────────────
+function EntityPill({ id, label, active, cfg, onClick }) {
+  const isAll = id === "ALL";
+  return (
+    <button onClick={onClick} style={{
+      fontSize:12, fontWeight:700, padding:"7px 18px", borderRadius:24, cursor:"pointer", letterSpacing:"0.04em",
+      border:`1.5px solid ${active ? (isAll ? T.borderMd : cfg.dot+"88") : T.border}`,
+      background: active ? (isAll ? "#f1f5f9" : cfg.light) : T.surface,
+      color: active ? (isAll ? T.textMd : cfg.color) : T.textXs,
+      transition:"all 0.13s",
+    }}>{label}</button>
+  );
+}
+
+// ─── STAT CARD ────────────────────────────────────────────────────────────────
+function StatCard({ label, value, color, light, border, active, onClick }) {
+  return (
+    <div onClick={onClick} style={{
+      flex:"1 1 70px", padding:"11px 13px", borderRadius:10, cursor:"pointer",
+      background: active ? light : T.surface,
+      border:`1.5px solid ${active ? border : T.border}`,
+      boxShadow: active ? `0 0 0 3px ${border}55` : "0 1px 3px #00000008",
+      transition:"all 0.13s", userSelect:"none",
+    }}>
+      <div style={{ fontSize:22, fontWeight:800, color, letterSpacing:"-0.04em" }}>{value}</div>
+      <div style={{ fontSize:9, fontWeight:700, color: active ? color : T.textXs, letterSpacing:"0.08em", marginTop:2 }}>{label}</div>
+    </div>
+  );
+}
+
+// ─── NOTICE ROW ───────────────────────────────────────────────────────────────
+function NoticeRow({ n, onClick, selected }) {
+  const ec = ENTITY_CFG[n.entity];
+  const sc = STATUS_CFG[n.status];
+  const days = n.status !== "furnished" ? daysUntil(n.expiryDate) : null;
+  return (
+    <div onClick={() => onClick(n)} style={{
+      display:"flex", alignItems:"center", gap:10, padding:"11px 14px",
+      borderRadius:9, cursor:"pointer", userSelect:"none",
+      background: selected ? ec.light : T.surface,
+      border:`1px solid ${selected ? ec.dot+"88" : T.border}`,
+      boxShadow: selected ? `0 0 0 2px ${ec.dot}33` : "0 1px 2px #00000006",
+      transition:"all 0.12s",
+    }}>
+      <div style={{ width:8, height:8, borderRadius:"50%", background:ec.dot, flexShrink:0 }}/>
+      <div style={{ fontFamily:"monospace", fontSize:13, fontWeight:700, color:T.text, width:76, flexShrink:0 }}>{n.vehicleNo}</div>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontSize:12, fontWeight:600, color:T.textMd, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{n.riderName || "—"}</div>
+        <div style={{ fontSize:10, color:T.textXs, marginTop:1, fontFamily:"monospace" }}>{n.noticeNo}</div>
+      </div>
+      <div style={{ textAlign:"right", flexShrink:0, minWidth:48 }}>
+        {n.courtDate && <div style={{ fontSize:10, fontWeight:700, color:"#6d28d9" }}>{n.courtDate.split(" ").slice(0,3).join(" ")}</div>}
+        {days !== null && !n.courtDate && (
+          <div style={{ fontSize:11, fontWeight:700, color: days < 0 ? "#b91c1c" : days <= 7 ? "#c2410c" : T.textXs }}>
+            {days < 0 ? "EXPIRED" : `${days}d`}
+          </div>
+        )}
+      </div>
+      <div style={{ fontSize:9, fontWeight:800, letterSpacing:"0.06em", padding:"3px 9px", borderRadius:20, flexShrink:0, background:sc.light, color:sc.color, border:`1px solid ${sc.border}`, whiteSpace:"nowrap" }}>
+        {sc.icon} {sc.label}
+      </div>
+      {n.missingData && <div style={{ fontSize:12, color:"#b91c1c" }}>⚠</div>}
+      {isSuspicious(n) && <div style={{ fontSize:10, fontWeight:800, padding:"2px 7px", borderRadius:12, background:"#fffbeb", color:"#b45309", border:"1px solid #fcd34d", whiteSpace:"nowrap" }}>⚠️ SUSP</div>}
+    </div>
+  );
+}
+
+// ─── TSV MODAL ────────────────────────────────────────────────────────────────
+function TsvModal({ tsv, onClose }) {
+  const ref = useRef(null);
+
+  function selectAll() {
+    if (ref.current) {
+      ref.current.select();
+      ref.current.setSelectionRange(0, 99999);
+    }
+  }
+
+  return (
+    <div style={{
+      position:"fixed", inset:0, background:"#00000066", zIndex:1000,
+      display:"flex", alignItems:"center", justifyContent:"center", padding:20,
+    }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{
+        background:T.surface, borderRadius:14, padding:20, width:"100%", maxWidth:560,
+        boxShadow:"0 8px 40px #00000033",
+      }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:12 }}>
+          <div>
+            <div style={{ fontSize:14, fontWeight:800, color:T.text }}>Tab-Separated Row</div>
+            <div style={{ fontSize:11, color:T.textSm, marginTop:2 }}>Select all → Copy → Paste into Google Sheet row</div>
+          </div>
+          <button onClick={onClose} style={{ background:"none", border:"none", fontSize:22, cursor:"pointer", color:T.textSm, lineHeight:1 }}>×</button>
+        </div>
+
+        {/* The selectable textarea */}
+        <textarea
+          ref={ref}
+          readOnly
+          value={tsv}
+          style={{
+            width:"100%", height:90, padding:"10px 12px", borderRadius:8,
+            fontSize:11, fontFamily:"monospace", color:T.text,
+            background:"#f8fafc", border:`1.5px solid ${T.borderMd}`,
+            resize:"none", outline:"none", boxSizing:"border-box",
+            lineHeight:1.5,
+          }}
+          onClick={selectAll}
+        />
+
+        <div style={{ display:"flex", gap:10, marginTop:12 }}>
+          <button onClick={selectAll} style={{
+            flex:1, padding:"11px", borderRadius:9, cursor:"pointer",
+            fontSize:13, fontWeight:800, background:"#0369a1", color:"#fff",
+            border:"none",
+          }}>
+            👆 Tap to Select All
+          </button>
+          <button onClick={onClose} style={{
+            padding:"11px 16px", borderRadius:9, cursor:"pointer",
+            fontSize:13, fontWeight:700, background:T.bg, color:T.textMd,
+            border:`1.5px solid ${T.borderMd}`,
+          }}>Done</button>
+        </div>
+
+        <div style={{ marginTop:10, fontSize:11, color:T.textXs, lineHeight:1.6 }}>
+          After copying: open Google Sheet → click cell A in an empty row → Ctrl+V (or ⌘V) → then copy that row into the LTA form.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── DETAIL PANEL — bottom sheet modal ────────────────────────────────────────
+function DetailPanel({ n, onClose, onColZSave }) {
+  const ec = ENTITY_CFG[n.entity];
+  const sc = STATUS_CFG[n.status];
+  const [colZ, setColZ] = useState(n.colZ || "");
+  const [saved, setSaved] = useState(false);
+  const [showTsv, setShowTsv] = useState(false);
+  const [dragY, setDragY] = useState(0);
+  const touchStartY = useRef(null);
+  const sheetRef = useRef(null);
+
+  const missing = LTA_FIELDS.filter(f => f.key && !n[f.key]).length;
+
+  function save() {
+    onColZSave(n.id, colZ);
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  }
+
+  function onTouchStart(e) {
+    touchStartY.current = e.touches[0].clientY;
+    setDragY(0);
+  }
+  function onTouchMove(e) {
+    const dy = e.touches[0].clientY - touchStartY.current;
+    if (dy > 0) setDragY(dy); // only allow dragging down
+  }
+  function onTouchEnd() {
+    if (dragY > 80) {
+      onClose(); // swipe threshold: 80px down
+    } else {
+      setDragY(0); // snap back
+    }
+    touchStartY.current = null;
+  }
+
+  // Bottom sheet: full-width overlay from bottom, scrollable inside
+  return (
+    <div style={{
+      position:"fixed", inset:0, zIndex:200,
+      background:"rgba(0,0,0,0.45)",
+      display:"flex", flexDirection:"column", justifyContent:"flex-end",
+    }} onClick={onClose}>
+      {showTsv && <TsvModal tsv={toTSV(n)} onClose={() => setShowTsv(false)} />}
+
+      <div
+        ref={sheetRef}
+        onClick={e => e.stopPropagation()}
+        style={{
+          background:T.bg, borderRadius:"18px 18px 0 0",
+          maxHeight:"88vh", display:"flex", flexDirection:"column",
+          boxShadow:"0 -4px 30px rgba(0,0,0,0.18)",
+          transform: `translateY(${dragY}px)`,
+          transition: dragY === 0 ? "transform 0.22s ease" : "none",
+        }}
+      >
+        {/* drag handle — touch this area to swipe down */}
+        <div
+          onTouchStart={onTouchStart}
+          onTouchMove={onTouchMove}
+          onTouchEnd={onTouchEnd}
+          style={{ display:"flex", justifyContent:"center", alignItems:"center", padding:"12px 0 6px", cursor:"grab", touchAction:"none" }}
+        >
+          <div style={{ width:40, height:5, borderRadius:3, background:T.borderMd }} />
+        </div>
+
+        {/* sticky header — always visible */}
+        <div style={{ padding:"0 16px 12px", flexShrink:0, background:ec.light, borderBottom:`1px solid ${ec.dot}33` }}>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+            <div style={{ display:"flex", gap:7, flexWrap:"wrap", alignItems:"center" }}>
+              <span style={{ fontSize:10, fontWeight:800, padding:"3px 10px", borderRadius:5, background:T.surface, color:ec.color, letterSpacing:"0.07em", border:`1px solid ${ec.dot}55` }}>{ec.label}</span>
+              <span style={{ fontSize:10, fontWeight:800, padding:"3px 10px", borderRadius:5, background:sc.light, color:sc.color, letterSpacing:"0.06em", border:`1px solid ${sc.border}` }}>{sc.icon} {sc.label}</span>
+              {missing > 0 && <span style={{ fontSize:10, fontWeight:700, color:"#b91c1c" }}>⚠ {missing} missing</span>}
+              {isSuspicious(n) && <span style={{ fontSize:10, fontWeight:800, padding:"2px 8px", borderRadius:12, background:"#fffbeb", color:"#b45309", border:"1px solid #fcd34d" }}>⚠️ Suspicious Activity</span>}
+            </div>
+            <button onClick={onClose} style={{ background:"none", border:"none", color:T.textSm, fontSize:22, cursor:"pointer", lineHeight:1, padding:"0 4px" }}>×</button>
+          </div>
+          <div style={{ marginTop:8, display:"flex", alignItems:"baseline", gap:10 }}>
+            <div style={{ fontFamily:"monospace", fontSize:20, fontWeight:800, color:T.text }}>{n.vehicleNo}</div>
+            <div style={{ fontSize:11, color:T.textSm, fontFamily:"monospace" }}>{n.noticeNo}</div>
+          </div>
+          {n.courtDate && (
+            <div style={{ marginTop:6, fontSize:11, fontWeight:700, color:"#6d28d9", padding:"4px 10px", background:"#ede9fe", borderRadius:6, display:"inline-block", border:"1px solid #c4b5fd" }}>
+              🏛 Court: {n.courtDate}
+            </div>
+          )}
+        </div>
+
+        {/* Col Z — pinned just below header, always visible */}
+        <div style={{ padding:"10px 16px", background:T.surface, borderBottom:`1px solid ${T.border}`, flexShrink:0 }}>
+          <div style={{ fontSize:10, fontWeight:700, color:T.textXs, letterSpacing:"0.07em", textTransform:"uppercase", marginBottom:5 }}>
+            LTA Response No. (Col Z)
+          </div>
+          {n.colZ && (
+            <div style={{ fontSize:11, color:"#15803d", marginBottom:6, fontWeight:600, fontFamily:"monospace",
+              background:"#f0fdf4", padding:"5px 10px", borderRadius:6, border:"1px solid #86efac", wordBreak:"break-all" }}>
+              ✓ {n.colZ}
+            </div>
+          )}
+          <div style={{ display:"flex", gap:8 }}>
+            <input value={colZ} onChange={e => setColZ(e.target.value)} placeholder="Paste LTA response number..."
+              style={{ flex:1, padding:"9px 12px", borderRadius:7, fontSize:12, background:T.bg, border:`1.5px solid ${T.borderMd}`, color:T.text, outline:"none", fontFamily:"monospace" }} />
+            <button onClick={save} style={{
+              padding:"9px 16px", borderRadius:7, fontSize:12, fontWeight:700, cursor:"pointer", whiteSpace:"nowrap",
+              background: saved ? "#dcfce7" : ec.light, color: saved ? "#15803d" : ec.color,
+              border:`1.5px solid ${saved ? "#86efac" : ec.dot+"66"}`,
+            }}>{saved ? "✓ Saved" : "Save"}</button>
+          </div>
+        </div>
+
+        {/* scrollable body */}
+        <div style={{ flex:1, overflowY:"auto", padding:"12px 16px", display:"flex", flexDirection:"column", gap:8 }}>
+
+
+
+          {/* LTA fields */}
+          <div style={{ fontSize:10, color:T.textXs, fontWeight:700, letterSpacing:"0.07em", textTransform:"uppercase", marginTop:4, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <span>Fields in LTA Form Order</span>
+            <span style={{ fontSize:9, color:T.textXs, fontWeight:500, letterSpacing:"0.03em", textTransform:"none" }}>🖱 Drag any value into LTA form</span>
+          </div>
+          {LTA_FIELDS.filter((f,i) => i < 14).map((f, i) => {
+            const val = f.key ? n[f.key] : "";
+            const empty = !val;
+            const [dragging, setDragging] = useState(false);
+            return (
+              <div key={i} style={{
+                display:"flex", alignItems:"center", gap:10, padding:"8px 12px",
+                borderRadius:8, background: empty ? "#fef2f2" : dragging ? ec.light : T.surface,
+                border:`1px solid ${empty ? "#fca5a5" : dragging ? ec.dot+"88" : T.border}`,
+                transition:"all 0.1s",
+              }}>
+                <div style={{ width:22, height:22, borderRadius:5, background: empty ? "#fca5a5" : ec.light, display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                  <span style={{ fontSize:9, fontWeight:800, color: empty ? "#b91c1c" : ec.color }}>{i+1}</span>
+                </div>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:9, fontWeight:700, color:T.textXs, letterSpacing:"0.07em", textTransform:"uppercase", marginBottom:1 }}>{f.label}</div>
+                  {empty
+                    ? <div style={{ fontSize:13, fontWeight:600, color:"#b91c1c" }}>— Missing —</div>
+                    : <div
+                        draggable
+                        onDragStart={e => { e.dataTransfer.setData("text/plain", val); setDragging(true); }}
+                        onDragEnd={() => setDragging(false)}
+                        style={{
+                          fontSize:13, fontWeight:600, color:T.text, wordBreak:"break-word",
+                          cursor:"grab", userSelect:"none",
+                          padding:"3px 8px", borderRadius:5,
+                          background: dragging ? ec.light : "#f8fafc",
+                          border:`1px dashed ${dragging ? ec.dot : T.borderMd}`,
+                          display:"inline-block",
+                        }}
+                        title="Drag into LTA form field"
+                      >{val}</div>
+                  }
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ height:20 }} /> {/* bottom breathing room */}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── MAIN ─────────────────────────────────────────────────────────────────────
+function LTADashboard() {
+  const [entity,      setEntity]      = useState("ALL");
+  const [statusTab,   setStatusTab]   = useState("ALL");
+  const [search,      setSearch]      = useState("");
+  const [sortBy,      setSortBy]      = useState("offenceDate");
+  const [selected,    setSelected]    = useState(null);
+  const [notices,     setNotices]     = useState(ALL_NOTICES);
+  const [showArchive, setShowArchive] = useState(false);
+  const [filterVehicle,  setFilterVehicle]  = useState("");
+  const [filterName,     setFilterName]     = useState("");
+  const [filterLocation, setFilterLocation] = useState("");
+
+  const entityNotices = useMemo(() =>
+    entity === "ALL" ? notices : notices.filter(n => n.entity === entity),
+  [notices, entity]);
+
+  const counts = useMemo(() => ({
+    total:      entityNotices.length,
+    court:      entityNotices.filter(n => n.status === "court").length,
+    expired:    entityNotices.filter(n => n.status === "expired").length,
+    pending:    entityNotices.filter(n => n.status === "pending").length,
+    furnished:  entityNotices.filter(n => n.status === "furnished").length,
+    suspicious: entityNotices.filter(n => isSuspicious(n)).length,
+  }), [entityNotices]);
+
+  // Dropdown options — unique sorted values from current entity pool
+  const vehicleOptions  = useMemo(() => [...new Set(entityNotices.map(n => n.vehicleNo))].sort(), [entityNotices]);
+  const nameOptions     = useMemo(() => [...new Set(entityNotices.map(n => n.riderName).filter(n => n && n !== "Not Found"))].sort(), [entityNotices]);
+  const locationOptions = useMemo(() => [...new Set(entityNotices.map(n => n.offenceLocation || "").filter(Boolean))].sort(), [entityNotices]);
+
+  // Archive = full 2026 record (all notices); Active = non-furnished only
+  const pool = showArchive
+    ? entityNotices
+    : entityNotices.filter(n => n.status !== "furnished");
+
+  const filtered = useMemo(() => {
+    let res = pool.filter(n => {
+      if (!showArchive && statusTab === "suspicious") return isSuspicious(n);
+      if (!showArchive && statusTab !== "ALL" && n.status !== statusTab) return false;
+      if (filterVehicle  && n.vehicleNo !== filterVehicle) return false;
+      if (filterName     && n.riderName !== filterName)    return false;
+      if (filterLocation && (n.offenceLocation || "") !== filterLocation) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return n.noticeNo.toLowerCase().includes(q) || n.nric.toLowerCase().includes(q) ||
+               n.vehicleNo.toLowerCase().includes(q) || n.riderName.toLowerCase().includes(q);
+      }
+      return true;
+    });
+    res.sort((a, b) => {
+      const oa = STATUS_ORDER.indexOf(a.status), ob = STATUS_ORDER.indexOf(b.status);
+      if (oa !== ob) return oa - ob;
+      const toTs = s => { const [d,m,y] = s.split("/"); return new Date(`${y}-${m}-${d}`); };
+      if (sortBy === "scanDate") return toTs(a.scanDate) - toTs(b.scanDate);
+      return toTs(a.offenceDate) - toTs(b.offenceDate);
+    });
+    return res;
+  }, [pool, statusTab, search, sortBy, showArchive, filterVehicle, filterName, filterLocation]);
+
+  function handleColZSave(id, colZ) {
+    setNotices(prev => prev.map(n => n.id === id ? { ...n, colZ, status: colZ ? "furnished" : n.status } : n));
+    if (selected?.id === id) setSelected(p => ({ ...p, colZ, status: colZ ? "furnished" : p.status }));
+  }
+
+  function handleEntityChange(e) {
+    setEntity(e); setStatusTab("ALL"); setSelected(null); setShowArchive(false);
+    setFilterVehicle(""); setFilterName(""); setFilterLocation(""); setSearch("");
+  }
+
+  const entityList = ["ALL","FBX","EKO","MOTO","EUQPL"];
+  const statusTabs = ["ALL","court","expired","pending","suspicious"];
+  const activeLabel = entity === "ALL" ? "All Entities" : ENTITY_CFG[entity]?.label;
+
+  return (
+    <div style={{ minHeight:"100vh", background:T.bg, color:T.text, fontFamily:"'DM Sans','Segoe UI',sans-serif", display:"flex", flexDirection:"column" }}>
+
+      <div style={{ padding:"14px 20px 0", background:T.surface, borderBottom:`1px solid ${T.border}`, flexShrink:0, boxShadow:"0 1px 3px #0000000a" }}>
+        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, flexWrap:"wrap", marginBottom:14 }}>
+          <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+            <div style={{ width:36, height:36, borderRadius:8, background:"#0369a1", display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ fontSize:16 }}>🚦</span>
+            </div>
+            <div>
+              <div style={{ fontSize:15, fontWeight:800, letterSpacing:"-0.02em", color:T.text }}>FBX · LTA Fines</div>
+              <div style={{ fontSize:10, color:T.textXs, letterSpacing:"0.05em" }}>FURNISHING OF RIDER PARTICULARS</div>
+            </div>
+          </div>
+          <button onClick={() => { setShowArchive(v => !v); setSelected(null); }} style={{
+            fontSize:11, fontWeight:700, padding:"7px 16px", borderRadius:8, cursor:"pointer",
+            background: showArchive ? "#dcfce7" : T.bg, color: showArchive ? "#15803d" : T.textMd,
+            border:`1.5px solid ${showArchive ? "#86efac" : T.borderMd}`,
+          }}>{showArchive ? "← Active Notices" : "📋 2026 Full Record"}</button>
+        </div>
+
+        {/* entity pills */}
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:14 }}>
+          {entityList.map(e => (
+            <EntityPill key={e} id={e} label={e === "ALL" ? "ALL" : ENTITY_CFG[e].label}
+              active={entity === e} cfg={e !== "ALL" ? ENTITY_CFG[e] : null} onClick={() => handleEntityChange(e)} />
+          ))}
+        </div>
+
+        {/* stat cards */}
+        <div style={{ display:"flex", gap:8, marginBottom:14, flexWrap:"wrap" }}>
+          <StatCard label="TOTAL"      value={counts.total}      color="#374151" light="#f8fafc" border="#e2e7ef" active={false} onClick={() => {}} />
+          <StatCard label="COURT"      value={counts.court}      color="#6d28d9" light="#ede9fe" border="#c4b5fd" active={!showArchive && statusTab==="court"}      onClick={() => { setShowArchive(false); setStatusTab("court"); }} />
+          <StatCard label="EXPIRED"    value={counts.expired}    color="#b91c1c" light="#fef2f2" border="#fca5a5" active={!showArchive && statusTab==="expired"}    onClick={() => { setShowArchive(false); setStatusTab("expired"); }} />
+          <StatCard label="PENDING"    value={counts.pending}    color="#92400e" light="#fefce8" border="#fde68a" active={!showArchive && statusTab==="pending"}    onClick={() => { setShowArchive(false); setStatusTab("pending"); }} />
+          <StatCard label="FURNISHED"  value={counts.furnished}  color="#14532d" light="#f0fdf4" border="#86efac" active={showArchive}                              onClick={() => { setShowArchive(true); setSelected(null); }} />
+          <StatCard label="⚠️ SUSPICIOUS" value={counts.suspicious} color="#b45309" light="#fffbeb" border="#fcd34d" active={!showArchive && statusTab==="suspicious"} onClick={() => { setShowArchive(false); setStatusTab("suspicious"); }} />
+        </div>
+
+        {/* sort + filter row */}
+        <div style={{ display:"flex", flexDirection:"column", gap:8, paddingBottom:14 }}>
+
+          {/* row 1: text search + sort */}
+          <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="🔍  Notice no., NRIC..."
+              style={{ flex:1, padding:"9px 12px", borderRadius:8, fontSize:12, background:T.bg, border:`1.5px solid ${T.borderMd}`, color:T.text, outline:"none" }}
+            />
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ padding:"9px 10px", borderRadius:8, fontSize:11, fontWeight:700, background:T.bg, border:`1.5px solid ${T.borderMd}`, color:T.textMd, outline:"none", cursor:"pointer", flexShrink:0 }}>
+              <option value="offenceDate">↕ Offence Date</option>
+              <option value="scanDate">↕ Scan Date</option>
+            </select>
+          </div>
+
+          {/* row 2: filter dropdowns */}
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+            {/* Vehicle No filter */}
+            <select value={filterVehicle} onChange={e => setFilterVehicle(e.target.value)}
+              style={{ flex:"1 1 120px", padding:"8px 10px", borderRadius:8, fontSize:11, fontWeight:600, background: filterVehicle ? "#eff6ff" : T.bg, border:`1.5px solid ${filterVehicle ? "#3b82f6" : T.borderMd}`, color: filterVehicle ? "#1d4ed8" : T.textMd, outline:"none", cursor:"pointer" }}>
+              <option value="">🚗 Vehicle No.</option>
+              {vehicleOptions.map(v => <option key={v} value={v}>{v}</option>)}
+            </select>
+
+            {/* Name filter */}
+            <select value={filterName} onChange={e => setFilterName(e.target.value)}
+              style={{ flex:"1 1 140px", padding:"8px 10px", borderRadius:8, fontSize:11, fontWeight:600, background: filterName ? "#eff6ff" : T.bg, border:`1.5px solid ${filterName ? "#3b82f6" : T.borderMd}`, color: filterName ? "#1d4ed8" : T.textMd, outline:"none", cursor:"pointer" }}>
+              <option value="">👤 Rider Name</option>
+              {nameOptions.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+
+            {/* Location of Offence filter */}
+            <select value={filterLocation} onChange={e => setFilterLocation(e.target.value)}
+              style={{ flex:"1 1 150px", padding:"8px 10px", borderRadius:8, fontSize:11, fontWeight:600, background: filterLocation ? "#eff6ff" : T.bg, border:`1.5px solid ${filterLocation ? "#3b82f6" : T.borderMd}`, color: filterLocation ? "#1d4ed8" : "#9ca3af", outline:"none", cursor: locationOptions.length ? "pointer" : "default", opacity: locationOptions.length ? 1 : 0.7 }}>
+              <option value="">📍 Offence Location</option>
+              {locationOptions.length === 0
+                ? <option disabled value="">— Coming soon —</option>
+                : locationOptions.map(l => <option key={l} value={l}>{l}</option>)
+              }
+            </select>
+
+            {/* Clear filters */}
+            {(filterVehicle || filterName || filterLocation || search) && (
+              <button onClick={() => { setFilterVehicle(""); setFilterName(""); setFilterLocation(""); setSearch(""); }}
+                style={{ padding:"8px 12px", borderRadius:8, fontSize:11, fontWeight:700, cursor:"pointer", background:"#fef2f2", color:"#b91c1c", border:"1.5px solid #fca5a5", flexShrink:0 }}>
+                ✕ Clear
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* status tabs */}
+        {!showArchive && (
+          <div style={{ display:"flex", gap:2 }}>
+            {statusTabs.map(s => {
+              const cfg = s !== "ALL" ? STATUS_CFG[s] : null;
+              const active = statusTab === s;
+              const cnt = s === "ALL" ? pool.length : counts[s];
+              return (
+                <button key={s} onClick={() => setStatusTab(s)} style={{
+                  fontSize:11, fontWeight:700, padding:"8px 13px 9px", cursor:"pointer",
+                  background:"transparent", border:"none",
+                  color: active ? (cfg ? cfg.color : T.textMd) : T.textXs,
+                  borderBottom: active ? `2.5px solid ${cfg ? cfg.color : T.textMd}` : "2.5px solid transparent",
+                  transition:"all 0.12s", letterSpacing:"0.04em",
+                }}>
+                  {s === "ALL" ? "ALL ACTIVE" : `${STATUS_CFG[s].icon} ${STATUS_CFG[s].label}`}
+                  <span style={{ marginLeft:5, fontSize:10, fontWeight:600, padding:"1px 6px", borderRadius:10, background: active && cfg ? cfg.light : T.bg, color: active && cfg ? cfg.color : T.textXs }}>
+                    {cnt}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* body */}
+      <div style={{ flex:1, display:"flex", overflow:"hidden", height:0 }}>
+        <div style={{ width:"100%", display:"flex", flexDirection:"column" }}>
+          {showArchive && (
+            <div style={{ padding:"10px 20px 6px", fontSize:11, fontWeight:700, color:"#15803d", letterSpacing:"0.05em", flexShrink:0 }}>
+              ✅ 2026 FULL RECORD — {activeLabel} · {pool.length} notices
+            </div>
+          )}
+          <div style={{ flex:1, overflowY:"auto", padding:"10px 16px", display:"flex", flexDirection:"column", gap:6 }}>
+            {filtered.length === 0
+              ? <div style={{ textAlign:"center", paddingTop:60, color:T.textXs, fontSize:13 }}>No notices match this filter</div>
+              : filtered.map(n => <NoticeRow key={n.id} n={n} onClick={setSelected} selected={selected?.id === n.id} />)
+            }
+          </div>
+          <div style={{ padding:"8px 20px", borderTop:`1px solid ${T.border}`, fontSize:10, color:T.textXs, background:T.surface, flexShrink:0 }}>
+            {filtered.length} of {pool.length} · {activeLabel} · sorted by {sortBy === "scanDate" ? "scan date" : "offence date"}
+          </div>
+        </div>
+
+        {selected && (
+          <DetailPanel n={selected} onClose={() => setSelected(null)} onColZSave={handleColZSave} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<LTADashboard />);
+  </script>
+</body>
+</html>
